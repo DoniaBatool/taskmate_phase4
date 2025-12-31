@@ -394,4 +394,397 @@ Response (201): {
 - Tables created via SQLModel migrations
 - Connection string secured in environment variables
 
-**Version**: 3.0.0 | **Ratified**: 2025-12-09 | **Last Amended**: 2025-12-09
+## Phase III+ Requirements: Reusable Intelligence Skills (MANDATORY)
+
+### ⚠️ CRITICAL ENFORCEMENT POLICY - SKILL-FIRST DEVELOPMENT
+
+**THIS IS A NON-NEGOTIABLE REQUIREMENT FROM PROJECT TEACHERS/INSTRUCTORS**
+
+Starting from Phase III (AI Chatbot) and all subsequent phases, the use of reusable intelligence skills is **MANDATORY** for ALL feature development. This is a religious enforcement policy.
+
+### 🚨 ABSOLUTE REQUIREMENTS (MUST FOLLOW)
+
+#### 1. Skills Are MANDATORY, Not Optional
+- ✅ **REQUIRED**: Use existing skills for ALL feature implementation
+- ❌ **VIOLATION**: Manual implementation when a skill exists
+- ✅ **REQUIRED**: Create new skills for missing capabilities
+- ❌ **VIOLATION**: Implementing features without skill-based approach
+
+#### 2. Terminal Output Is MANDATORY
+Every skill usage MUST produce visible terminal output:
+```text
+🔧 Using Skill: /sp.skill-name
+
+Purpose: [What this skill does]
+Constitution Check: ✓ Passed
+Tasks Covered: T123-T125
+Files Generated:
+  - path/to/file1.py
+  - path/to/file2.py
+  - path/to/test.py
+
+✅ Skill Complete
+```
+
+**If you don't see this output, the skill was NOT used (VIOLATION).**
+
+#### 3. Skill Planning Is MANDATORY
+Before implementing ANY feature:
+1. ✅ **STEP 1**: Analyze all tasks in the feature
+2. ✅ **STEP 2**: Map each task to existing skills OR identify need for new skills
+3. ✅ **STEP 3**: Display skill execution plan in terminal
+4. ✅ **STEP 4**: Wait for user approval
+5. ✅ **STEP 5**: Execute using identified skills (invoke via Skill tool)
+6. ✅ **STEP 6**: Report skill usage in PHR and commit message
+
+**Example Terminal Output:**
+```text
+🔧 Phase 8: Performance Optimization
+
+Skills Plan:
+1. /sp.connection-pooling → Verify pool configuration (T163-T164)
+2. /sp.skill-creator → Create /sp.performance-logger (T165-T166)
+3. /sp.performance-logger → Add execution time logging
+4. /sp.ab-testing → Run load tests (T167-T169)
+
+Waiting for approval... ✋
+```
+
+#### 4. Skill Creation Is MANDATORY When Needed
+If no skill exists for required capability:
+1. ✅ Use `/sp.skill-creator` to create new skill FIRST
+2. ✅ Document new skill in `SKILLS.md`
+3. ✅ THEN use the newly created skill
+4. ❌ NEVER implement manually if capability can be a skill
+
+### 📋 Complete Skills Reference (31 Available Skills)
+
+**Location**: All skills are in `.claude/skills/` directory
+**Usage**: Invoke via `Skill` tool with skill name (e.g., `/sp.mcp-tool-builder`)
+**Requirement**: MUST be used for ALL applicable work in Phase III+
+
+---
+
+#### 1️⃣ Workflow & Planning Skills (5 skills)
+
+| Skill | When to Use | Auto-Trigger | Output |
+|-------|-------------|--------------|--------|
+| `/sp.specify` | Creating feature specifications | When user requests new feature | `specs/{feature}/spec.md` |
+| `/sp.plan` | Generating implementation plans | After spec created | `specs/{feature}/plan.md` |
+| `/sp.tasks` | Breaking down into tasks | After plan created | `specs/{feature}/tasks.md` |
+| `/sp.implement` | Executing implementation | After tasks created | Code files, tests |
+| `/sp.new-feature` | Complete spec→plan→tasks flow | User requests "new feature from scratch" | All three files in one workflow |
+
+**When user says**: "Create a new feature for X" → Use `/sp.new-feature`
+**When user says**: "Plan how to implement X" → Use `/sp.plan`
+
+---
+
+#### 2️⃣ Core Implementation Skills - Phase III (5 skills)
+
+| Skill | When to Use | Tasks Covered | Constitution Principle |
+|-------|-------------|---------------|----------------------|
+| `/sp.mcp-tool-builder` | Creating MCP tools for AI agent | Task CRUD operations (add, list, update, delete, complete) | Principle VI (MCP-First Design) |
+| `/sp.ai-agent-setup` | Configuring OpenAI Agents SDK | AI agent initialization, tool binding | Principle II (Stateless Architecture) |
+| `/sp.chatbot-endpoint` | Creating stateless chat API | Chat endpoint with JWT validation | Principle II (Stateless), Principle V (Security) |
+| `/sp.conversation-manager` | Managing conversation state | Conversation/Message models, history | Principle III (Database-Centric State) |
+| `/sp.database-schema-expander` | Adding new database tables | New SQLModel models, migrations, indexes | Principle III (Database-Centric State) |
+
+**When user says**: "Add chat functionality" → Use `/sp.ai-agent-setup` + `/sp.chatbot-endpoint` + `/sp.conversation-manager`
+**When user says**: "Create add_task tool" → Use `/sp.mcp-tool-builder`
+
+---
+
+#### 3️⃣ Foundation Skills - Phase II Patterns (6 skills)
+
+| Skill | When to Use | Tasks Covered | Constitution Principle |
+|-------|-------------|---------------|----------------------|
+| `/sp.jwt-authentication` | Setting up user authentication | JWT creation/verification, protected endpoints | Principle V (Security & User Isolation) |
+| `/sp.user-isolation` | Protecting user-owned resources | Query scoping, ownership checks, security logging | Principle V (Security & User Isolation) |
+| `/sp.password-security` | Implementing signup/login | bcrypt hashing, signup/login endpoints, secure schemas | Principle V (Security & User Isolation) |
+| `/sp.pydantic-validation` | Creating API endpoints | Request/response DTOs, custom validators | Principle IV (RESTful API Architecture) |
+| `/sp.connection-pooling` | Setting up database connections | Engine config, pool settings, health monitoring | Principle VII (Database Performance) |
+| `/sp.transaction-management` | Implementing database writes | Try/commit/rollback, multi-step atomicity | Principle III (Database-Centric State) |
+
+**When user says**: "Add authentication" → Use `/sp.jwt-authentication` + `/sp.password-security`
+**When user says**: "Protect user data" → Use `/sp.user-isolation`
+
+---
+
+#### 4️⃣ Role-Based Development Skills (7 skills)
+
+| Skill | When to Use | Capabilities | Best For |
+|-------|-------------|--------------|----------|
+| `/sp.backend-developer` | Backend API implementation | FastAPI endpoints, SQLModel, business logic | REST API, database operations |
+| `/sp.frontend-developer` | Frontend UI implementation | Next.js, React components, API client | UI/UX, user interfaces |
+| `/sp.fullstack-architect` | System design & architecture | End-to-end architecture, integration | Complex multi-layer features |
+| `/sp.database-engineer` | Database optimization | Schema design, indexes, migrations, queries | Database performance, data modeling |
+| `/sp.devops-engineer` | Infrastructure & deployment | Docker, CI/CD, environment setup | Deployment, infrastructure |
+| `/sp.security-engineer` | Security hardening | OWASP audit, vulnerability scanning, security tests | Security compliance, penetration testing |
+| `/sp.uiux-designer` | User experience design | Wireframes, user flows, component design | Design-first features |
+
+**When user says**: "Implement backend API" → Use `/sp.backend-developer`
+**When user says**: "Create UI for X" → Use `/sp.frontend-developer`
+**When user says**: "Run security audit" → Use `/sp.security-engineer`
+
+---
+
+#### 5️⃣ Quality & Testing Skills (3 skills)
+
+| Skill | When to Use | Test Coverage | Auto-Trigger |
+|-------|-------------|---------------|--------------|
+| `/sp.edge-case-tester` | After any feature implementation | 57+ edge case scenarios | ✅ Automatically after `/sp.implement` |
+| `/sp.ab-testing` | Validating feature variations | A/B test framework, variant configs, analytics | Manual - for experiments |
+| `/sp.qa-engineer` | Creating comprehensive test suites | Unit tests, integration tests, smoke tests, E2E | When implementing critical features |
+
+**When user says**: "Test this feature" → Use `/sp.edge-case-tester` + `/sp.qa-engineer`
+**When user says**: "Run A/B test" → Use `/sp.ab-testing`
+
+---
+
+#### 6️⃣ Production & Deployment Skills (5 skills)
+
+| Skill | When to Use | Tasks Covered | Output |
+|-------|-------------|---------------|--------|
+| `/sp.performance-logger` | Adding performance monitoring | Execution time logging, structured metrics | `utils/performance.py`, decorators |
+| `/sp.structured-logging` | Setting up production logging | JSON logging, log aggregation compatibility | `logging_config.py`, error context |
+| `/sp.deployment-automation` | Creating deployment workflows | Deploy scripts, validation, health checks | `scripts/deploy.sh`, CI/CD configs |
+| `/sp.production-checklist` | Validating production readiness | Security, performance, monitoring checklists | Production readiness report |
+| `/sp.vercel-deployer` | Deploying to Vercel | Frontend deployment, environment config | Vercel deployment configs |
+
+**When user says**: "Add performance logging" → Use `/sp.performance-logger`
+**When user says**: "Prepare for production" → Use `/sp.production-checklist`
+**When user says**: "Deploy to Vercel" → Use `/sp.vercel-deployer`
+
+---
+
+#### 7️⃣ Specialized Utility Skills (5 skills)
+
+| Skill | When to Use | Purpose | Output |
+|-------|-------------|---------|--------|
+| `/sp.api-docs-generator` | Generating API documentation | OpenAPI/Swagger docs, deployment guides | API docs, CHANGELOG.md |
+| `/sp.change-management` | Modifying existing features | Impact analysis, safe changes, rollback plan | Change spec, updated files |
+| `/sp.skill-creator` | Creating new reusable skills | When new capability needed | New skill in `.claude/skills/` |
+| `/sp.github-specialist` | GitHub operations | Issues, PRs, releases, GitHub Actions | GitHub configs, workflows |
+| `/sp.conversation-manager` | Managing chat state | Conversation/Message models | Database models, services |
+
+**When user says**: "Document the API" → Use `/sp.api-docs-generator`
+**When user says**: "Modify existing feature X" → Use `/sp.change-management`
+**When user says**: "Create new skill for Y" → Use `/sp.skill-creator`
+
+---
+
+### 🎯 Feature → Skills Mapping (Common Scenarios)
+
+#### Scenario 1: "Create AI chatbot for task management"
+**Required Skills** (Sequential):
+1. `/sp.database-schema-expander` → Conversation & Message tables
+2. `/sp.mcp-tool-builder` (5x) → add_task, list_tasks, complete_task, update_task, delete_task
+3. `/sp.ai-agent-setup` → OpenAI Agents SDK configuration
+4. `/sp.chatbot-endpoint` → Stateless chat API
+5. `/sp.conversation-manager` → Conversation state management
+6. `/sp.edge-case-tester` → Comprehensive testing (auto-trigger)
+
+#### Scenario 2: "Add user authentication"
+**Required Skills** (Sequential):
+1. `/sp.database-schema-expander` → Users table (if needed)
+2. `/sp.jwt-authentication` → JWT creation/verification
+3. `/sp.password-security` → bcrypt hashing, auth endpoints
+4. `/sp.user-isolation` → Protect all user data
+5. `/sp.pydantic-validation` → Auth request/response schemas
+6. `/sp.security-engineer` → Security audit
+
+#### Scenario 3: "Performance optimization"
+**Required Skills** (Sequential):
+1. `/sp.connection-pooling` → Verify pool configuration
+2. `/sp.performance-logger` → Add execution time logging
+3. `/sp.structured-logging` → JSON logging setup
+4. `/sp.database-engineer` → Query optimization, indexes
+5. `/sp.ab-testing` → Load testing, performance validation
+
+#### Scenario 4: "Prepare for production deployment"
+**Required Skills** (Sequential):
+1. `/sp.security-engineer` → OWASP security audit
+2. `/sp.performance-logger` → Performance monitoring
+3. `/sp.structured-logging` → Production logging
+4. `/sp.api-docs-generator` → API documentation
+5. `/sp.deployment-automation` → Deployment scripts
+6. `/sp.qa-engineer` → Smoke tests
+7. `/sp.production-checklist` → Production readiness validation
+
+#### Scenario 5: "Add new feature X from scratch"
+**Required Skills** (Sequential):
+1. `/sp.new-feature` → Creates spec.md, plan.md, tasks.md
+2. `/sp.fullstack-architect` → System design
+3. `/sp.backend-developer` → Backend implementation
+4. `/sp.frontend-developer` → Frontend implementation
+5. `/sp.edge-case-tester` → Edge case testing (auto)
+6. `/sp.qa-engineer` → Integration testing
+
+---
+
+### 📊 Skills Usage Patterns
+
+#### Pattern 1: Role-Based Development
+When implementing complex features, chain role-based skills:
+```text
+/sp.fullstack-architect → Overall design
+  ↓
+/sp.backend-developer → API implementation
+  ↓
+/sp.frontend-developer → UI implementation
+  ↓
+/sp.qa-engineer → Testing
+```
+
+#### Pattern 2: Foundation First
+Always establish foundation before adding features:
+```text
+/sp.database-schema-expander → Data models
+  ↓
+/sp.connection-pooling → Database setup
+  ↓
+/sp.transaction-management → Write operations
+  ↓
+/sp.backend-developer → Business logic
+```
+
+#### Pattern 3: Security & Testing Last
+End every feature with security and testing:
+```text
+[Feature Implementation]
+  ↓
+/sp.user-isolation → Protect user data
+  ↓
+/sp.security-engineer → Security audit
+  ↓
+/sp.edge-case-tester → Edge cases (auto)
+  ↓
+/sp.qa-engineer → Comprehensive tests
+```
+
+### 🎯 Skill Usage Contract
+
+#### Quick Reference: User Request → Skills
+
+**See "Feature → Skills Mapping" section above for 5 complete scenarios.**
+
+**Common Patterns**:
+- "Create X" → `/sp.new-feature` (spec→plan→tasks)
+- "Implement X" → Role-based skills (`/sp.backend-developer`, `/sp.frontend-developer`)
+- "Add authentication" → `/sp.jwt-authentication` + `/sp.password-security` + `/sp.user-isolation`
+- "Optimize performance" → `/sp.connection-pooling` + `/sp.performance-logger` + `/sp.database-engineer`
+- "Deploy to production" → Production & Deployment skills (5 skills in sequence)
+- "Test X" → `/sp.edge-case-tester` + `/sp.qa-engineer`
+- "Modify existing feature" → `/sp.change-management`
+
+#### Automatic Skill Triggers (MANDATORY)
+- ✅ After `/sp.implement` completes → **MUST** auto-run `/sp.edge-case-tester`
+- ✅ After any database write → **SHOULD** use `/sp.transaction-management`
+- ✅ After new API endpoint → **SHOULD** use `/sp.pydantic-validation`
+- ✅ After any feature completion → **SUGGEST** `/sp.ab-testing` for validation
+- ✅ After architecture changes → **SUGGEST** `/sp.adr` (Architecture Decision Record)
+
+### ⚡ Enforcement Mechanism
+
+#### PASS ✅ - Skill-Based Implementation
+```text
+User: "Add performance logging to all services"
+Claude:
+  🔧 Skill Plan:
+  1. /sp.skill-creator → Create /sp.performance-logger
+  2. /sp.performance-logger → Add logging to services
+
+  Waiting for approval... ✋
+
+User: "Approved"
+Claude:
+  🔧 Using Skill: /sp.skill-creator
+  Purpose: Create performance logging skill
+  ✅ Skill Complete
+
+  🔧 Using Skill: /sp.performance-logger
+  Purpose: Add @log_execution_time decorators
+  Files Generated:
+    - backend/src/utils/performance.py
+    - backend/src/services/conversation_service.py
+  ✅ Skill Complete
+```
+
+#### FAIL ❌ - Manual Implementation (VIOLATION)
+```text
+User: "Add performance logging to all services"
+Claude: [Creates utils/performance.py manually without using skills]
+
+❌ VIOLATION: Manual implementation without skill usage
+✅ CORRECT: Use /sp.skill-creator first, then invoke skill
+```
+
+### 📊 Skills Usage Tracking (MANDATORY)
+
+Every feature implementation MUST include:
+1. **Skill Execution Plan** - Before starting work
+2. **Terminal Skill Output** - During execution (visible to user)
+3. **Skills Usage Report** - In PHR and commit message
+
+**PHR Template Requirement:**
+```yaml
+skills_used:
+  - name: /sp.mcp-tool-builder
+    tasks: T45-T48
+    purpose: Create add_task MCP tool
+    files: [src/mcp_tools/add_task.py]
+  - name: /sp.edge-case-tester
+    tasks: T60-T62
+    purpose: Comprehensive edge case testing
+    status: 57/57 passed
+skills_created:
+  - name: /sp.performance-logger
+    reason: No existing skill for execution time logging
+    location: .claude/skills/sp.performance-logger.md
+manual_tasks:
+  - task: None (all tasks completed via skills)
+violations: None
+```
+
+### 🏫 Why Skills Are MANDATORY (Educational Requirement)
+
+**Project teachers/instructors require skill-based approach because:**
+1. **Consistency**: Ensures all students follow same patterns
+2. **Reusability**: Skills improve and become smarter over time
+3. **Constitution Enforcement**: Skills automatically apply project principles
+4. **Quality**: Skills include comprehensive testing and validation
+5. **Learning**: Students understand feature patterns, not just code
+6. **Traceability**: Clear audit trail of what was used when
+
+### 🚫 What Constitutes a Violation
+
+**Violations include:**
+- ❌ Implementing features manually when skills exist
+- ❌ No terminal output showing skill usage
+- ❌ No skill execution plan before starting work
+- ❌ Not creating skills for reusable capabilities
+- ❌ PHR/commits without skills usage documentation
+- ❌ Proceeding without user approval of skill plan
+
+**Consequences of violations:**
+- ⚠️ Work must be redone using proper skill-based approach
+- ⚠️ Constitution updated to prevent future violations
+- ⚠️ Skills created retroactively for violated implementations
+
+### ✅ Skill-Based Development Checklist
+
+Before considering ANY Phase III+ feature complete:
+- [ ] Skill execution plan created and approved
+- [ ] Terminal output shows which skills were used
+- [ ] All applicable skills invoked (or new skills created)
+- [ ] Skills usage documented in PHR
+- [ ] Skills usage mentioned in commit message
+- [ ] No manual implementation where skills exist
+- [ ] Constitution principles enforced via skills
+
+**Remember: Skills are NOT optional. They are MANDATORY for all Phase III+ development.**
+
+---
+
+**Version**: 4.0.0 | **Ratified**: 2025-12-09 | **Last Amended**: 2025-12-31 (Phase III Skills Policy Added)
