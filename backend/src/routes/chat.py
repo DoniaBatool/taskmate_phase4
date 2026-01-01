@@ -8,8 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlmodel import Session
 
-from ..auth.dependencies import get_current_user_id
-from ..db import get_db
+from ..auth.dependencies import get_current_user
+from ..db import get_session
 from ..services.conversation_service import ConversationService
 from ..ai_agent.runner import run_agent, AgentResponse
 from ..ai_agent.tools import register_tools
@@ -26,6 +26,143 @@ import time
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["chat"])
+
+
+@router.get("/conversations/latest")
+async def get_latest_conversation(
+    current_user_id: str = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
+    """Get user's most recent conversation with messages.
+
+    Args:
+        current_user_id: Authenticated user ID from JWT
+        db: Database session
+
+    Returns:
+        Latest conversation with its messages, or null if no conversations exist
+
+    Example:
+        >>> # GET /api/conversations/latest
+        >>> {
+        ...     "conversation_id": 5,
+        ...     "created_at": "2026-01-01T10:00:00",
+        ...     "messages": [...]
+        ... }
+    """
+    try:
+        from ..models import Conversation
+        from sqlmodel import select, desc
+
+        # Get user's most recent conversation
+        statement = (
+            select(Conversation)
+            .where(Conversation.user_id == current_user_id)
+            .order_by(desc(Conversation.updated_at))
+            .limit(1)
+        )
+        conversation = db.exec(statement).first()
+
+        if not conversation:
+            return {"conversation_id": None, "messages": []}
+
+        # Fetch messages for this conversation
+        conversation_service = ConversationService(db)
+        messages = conversation_service.get_conversation_history(
+            conversation.id,
+            current_user_id,
+            limit=100
+        )
+
+        return {
+            "conversation_id": conversation.id,
+            "created_at": conversation.created_at.isoformat(),
+            "updated_at": conversation.updated_at.isoformat(),
+            "messages": [
+                {
+                    "role": msg.role,
+                    "content": msg.content,
+                    "created_at": msg.created_at.isoformat()
+                }
+                for msg in messages
+            ]
+        }
+
+    except Exception as e:
+        logger.error(
+            f"Failed to fetch latest conversation: {e}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch latest conversation"
+        )
+
+
+@router.get("/conversations/{conversation_id}/messages")
+async def get_conversation_messages(
+    conversation_id: int,
+    current_user_id: str = Depends(get_current_user),
+    db: Session = Depends(get_session)
+):
+    """Get all messages for a conversation.
+
+    Args:
+        conversation_id: ID of the conversation
+        current_user_id: Authenticated user ID from JWT
+        db: Database session
+
+    Returns:
+        List of messages with role, content, and timestamp
+
+    Raises:
+        HTTPException 403: If conversation doesn't belong to user
+        HTTPException 404: If conversation not found
+    """
+    try:
+        conversation_service = ConversationService(db)
+
+        # Get conversation to verify ownership
+        conversation = conversation_service.get_conversation(
+            conversation_id,
+            current_user_id
+        )
+
+        if not conversation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Conversation {conversation_id} not found"
+            )
+
+        # Fetch messages
+        messages = conversation_service.get_conversation_history(
+            conversation_id,
+            current_user_id,
+            limit=100
+        )
+
+        return {
+            "messages": [
+                {
+                    "role": msg.role,
+                    "content": msg.content,
+                    "created_at": msg.created_at.isoformat()
+                }
+                for msg in messages
+            ]
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Failed to fetch conversation messages: {e}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch conversation history"
+        )
 
 
 class ChatRequest(BaseModel):
@@ -92,8 +229,8 @@ class ChatResponse(BaseModel):
 async def chat(
     user_id: str,
     request: ChatRequest,
-    current_user_id: str = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
+    current_user_id: str = Depends(get_current_user),
+    db: Session = Depends(get_session)
 ) -> ChatResponse:
     """Process chat message and return AI assistant response.
 

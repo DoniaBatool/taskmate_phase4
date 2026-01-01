@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Alert } from '@/components/Alert';
-import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { TaskForm } from '@/components/TaskForm';
 import { TaskItem } from '@/components/TaskItem';
+import { Header } from '@/components/Header';
 import { apiFetch, AuthError } from '@/lib/api';
 import { clearToken, getToken } from '@/lib/auth';
 import { Task } from '@/lib/types';
@@ -133,28 +133,20 @@ export default function TasksPage() {
     }
   }
 
-  function handleLogout() {
-    clearToken();
-    router.replace('/login');
-  }
-
   return (
-    <div className="min-h-screen px-4 py-8">
-      <div className="mx-auto flex max-w-5xl flex-col gap-6">
-        <header className="flex items-center justify-between">
+    <>
+      <Header />
+      <div className="min-h-screen px-4 py-8">
+        <div className="mx-auto flex max-w-5xl flex-col gap-6">
           <div>
-            <h1 className="text-3xl font-bold text-white">Your Tasks</h1>
-            <p className="text-sm text-slate-300">Manage your todos securely.</p>
+            <h1 className="text-3xl font-bold text-theme-primary">Your Tasks</h1>
+            <p className="text-sm text-theme-secondary">Manage your todos securely.</p>
           </div>
-          <Button variant="secondary" onClick={handleLogout}>
-            Logout
-          </Button>
-        </header>
 
         {error ? <Alert variant="error">{error}</Alert> : null}
 
         <Card>
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-lg font-semibold text-theme-primary">
             {editing ? 'Edit task' : 'Create a new task'}
           </h2>
           <TaskForm
@@ -171,13 +163,13 @@ export default function TasksPage() {
 
         <Card className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">Task list</h2>
-            {loading ? <span className="text-sm text-slate-400">Loading...</span> : null}
+            <h2 className="text-lg font-semibold text-theme-primary">Task list</h2>
+            {loading ? <span className="text-sm text-theme-tertiary">Loading...</span> : null}
           </div>
           {loading ? (
-            <p className="text-slate-400">Fetching tasks...</p>
+            <p className="text-theme-secondary">Fetching tasks...</p>
           ) : tasks.length === 0 ? (
-            <p className="text-slate-300">No tasks yet. Add your first task above.</p>
+            <p className="text-theme-secondary">No tasks yet. Add your first task above.</p>
           ) : (
             <div className="space-y-3">
               {tasks.map((task) => (
@@ -194,5 +186,6 @@ export default function TasksPage() {
         </Card>
       </div>
     </div>
+    </>
   );
 }

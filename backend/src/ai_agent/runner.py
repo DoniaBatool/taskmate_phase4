@@ -83,22 +83,42 @@ async def run_agent(
             messages.extend(conversation_history)
             messages.append({"role": "user", "content": message})
 
-        # Call OpenAI API (placeholder - will be implemented with actual tool calls)
-        # For Phase 2, we're just setting up the structure
+        # Call OpenAI API with tools
         with track_performance("agent_execution", user_id):
             logger.info(
                 f"Agent execution for user {user_id}: message length {len(message)}"
             )
 
-            # Placeholder response - actual implementation will use OpenAI chat completions
-            response_text = (
-                "Agent is configured and ready. "
-                "Tool integration will be completed in Phase 3+."
+            # Call OpenAI chat completions with function calling
+            completion = client.chat.completions.create(
+                model="gpt-4o",
+                messages=messages,
+                tools=tools,
+                tool_choice="auto"  # Let the model decide when to use tools
+            )
+
+            # Extract response
+            response_message = completion.choices[0].message
+            response_text = response_message.content or ""
+
+            # Extract tool calls if any
+            tool_calls_data = []
+            if response_message.tool_calls:
+                for tool_call in response_message.tool_calls:
+                    import json
+                    tool_calls_data.append({
+                        "tool": tool_call.function.name,
+                        "params": json.loads(tool_call.function.arguments)
+                    })
+
+            logger.info(
+                f"Agent response for user {user_id}: "
+                f"{len(response_text)} chars, {len(tool_calls_data)} tool calls"
             )
 
         return AgentResponse(
             response=response_text,
-            tool_calls=[]
+            tool_calls=tool_calls_data
         )
 
     except TimeoutError as e:

@@ -42,8 +42,8 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Create your account</h1>
-          <p className="text-sm text-slate-300">Sign up to manage your tasks.</p>
+          <h1 className="text-2xl font-semibold text-theme-primary">Create your account</h1>
+          <p className="text-sm text-theme-secondary">Sign up to manage your tasks.</p>
         </div>
         {error ? <Alert variant="error">{error}</Alert> : null}
         {success ? <Alert variant="success">{success}</Alert> : null}
@@ -74,9 +74,9 @@ export default function SignupPage() {
             {loading ? 'Creating...' : 'Sign Up'}
           </Button>
         </form>
-        <p className="text-sm text-slate-300">
+        <p className="text-sm text-theme-secondary">
           Already have an account?{' '}
-          <button className="text-blue-300 hover:underline" onClick={() => router.push('/login')}>
+          <button className="text-blue-400 hover:underline" onClick={() => router.push('/login')}>
             Log in
           </button>
         </p>

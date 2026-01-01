@@ -1,6 +1,6 @@
 """MCP Tool: update_task
 
-Updates task title or description for the authenticated user.
+Updates task title, description, or priority for the authenticated user.
 
 This tool enables AI agents to modify task details based on
 natural language input.
@@ -8,7 +8,7 @@ natural language input.
 
 from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from sqlmodel import Session, select
 
 from ..models import Task
@@ -22,12 +22,29 @@ class UpdateTaskParams(BaseModel):
         task_id: ID of the task to update
         title: New task title (optional)
         description: New task description (optional)
+        priority: New task priority level (optional)
     """
 
     user_id: str = Field(..., description="User ID for task ownership")
     task_id: int = Field(..., description="ID of the task to update")
     title: Optional[str] = Field(None, description="New task title")
     description: Optional[str] = Field(None, description="New task description")
+    priority: Optional[str] = Field(
+        None,
+        description="New task priority level (high, medium, low)"
+    )
+
+    @validator("priority")
+    def validate_priority(cls, v):
+        """Validate priority is one of the allowed values."""
+        if v is None:
+            return v
+        allowed = ["high", "medium", "low"]
+        if v not in allowed:
+            raise ValueError(
+                f"Invalid priority: {v}. Must be one of: {', '.join(allowed)}"
+            )
+        return v
 
     class Config:
         """Pydantic configuration."""
@@ -35,7 +52,8 @@ class UpdateTaskParams(BaseModel):
             "example": {
                 "user_id": "user-123",
                 "task_id": 3,
-                "title": "Buy milk and eggs"
+                "title": "Buy milk and eggs",
+                "priority": "high"
             }
         }
 
@@ -48,6 +66,7 @@ class UpdateTaskResult(BaseModel):
         title: Updated task title
         description: Updated task description
         completed: Task completion status
+        priority: Task priority level
         updated_at: Timestamp when task was updated
     """
 
@@ -55,6 +74,7 @@ class UpdateTaskResult(BaseModel):
     title: str = Field(..., description="Task title")
     description: Optional[str] = Field(None, description="Task description")
     completed: bool = Field(..., description="Task completion status")
+    priority: str = Field(..., description="Task priority level")
     updated_at: datetime = Field(..., description="Timestamp of update")
 
     class Config:
@@ -65,13 +85,14 @@ class UpdateTaskResult(BaseModel):
                 "title": "Buy milk and eggs",
                 "description": "From grocery store",
                 "completed": False,
+                "priority": "high",
                 "updated_at": "2025-12-30T16:30:00Z"
             }
         }
 
 
 def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
-    """Update task title or description.
+    """Update task title, description, or priority.
 
     This is the core MCP tool function that AI agents call to update tasks.
 
@@ -90,20 +111,22 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
         - Returns generic "not found" error (doesn't reveal if task exists for other user)
 
     Validation:
-        - At least one field (title or description) must be provided
+        - At least one field (title, description, or priority) must be provided
 
     Example:
         >>> params = UpdateTaskParams(
         ...     user_id="user-123",
         ...     task_id=3,
-        ...     title="Buy milk and eggs"
+        ...     title="Buy milk and eggs",
+        ...     priority="high"
         ... )
         >>> result = update_task(db, params)
         >>> assert result.title == "Buy milk and eggs"
+        >>> assert result.priority == "high"
     """
     # Validate at least one field provided (T128)
-    if params.title is None and params.description is None:
-        raise ValueError("At least one field (title or description) must be provided")
+    if params.title is None and params.description is None and params.priority is None:
+        raise ValueError("At least one field (title, description, or priority) must be provided")
 
     # Query task with user_id AND task_id (T129)
     # This enforces user isolation
@@ -128,8 +151,10 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
         task.title = params.title
     if params.description is not None:
         task.description = params.description
+    if params.priority is not None:
+        task.priority = params.priority
 
-    # Always update timestamp
+    # Always update timestamp (T022)
     task.updated_at = datetime.utcnow()
 
     # Persist changes
@@ -147,5 +172,6 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
         title=task.title,
         description=task.description,
         completed=task.completed,
+        priority=task.priority,
         updated_at=task.updated_at
     )

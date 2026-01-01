@@ -1,9 +1,18 @@
 """SQLModel database models for User and Task entities."""
 
 from datetime import datetime
+from enum import Enum as PyEnum
 from typing import List, Optional
 
+from sqlalchemy import Column, Enum
 from sqlmodel import Field, Relationship, SQLModel
+
+
+class PriorityLevel(str, PyEnum):
+    """Task priority levels."""
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
 
 
 class User(SQLModel, table=True):
@@ -91,6 +100,15 @@ class Task(SQLModel, table=True):
         index=True,
         description="Completion status"
     )
+    priority: str = Field(
+        default="medium",
+        sa_column=Column(
+            Enum("high", "medium", "low", name="priority_enum"),
+            nullable=False,
+            server_default="medium"
+        ),
+        description="Task priority level (high, medium, low)"
+    )
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         description="Task creation timestamp"
@@ -99,7 +117,7 @@ class Task(SQLModel, table=True):
         default_factory=datetime.utcnow,
         description="Last update timestamp"
     )
-    
+
     # Relationships
     user: Optional[User] = Relationship(back_populates="tasks")
 

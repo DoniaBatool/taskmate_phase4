@@ -10,7 +10,7 @@ type Props = {
 
 export function Card({ children, className }: Props) {
   return (
-    <div className={clsx('rounded-lg border border-slate-800 bg-[#101631] p-6 shadow-lg', className)}>
+    <div className={clsx('card-theme rounded-lg p-6 shadow-lg transition-all duration-300', className)}>
       {children}
     </div>
   );

@@ -51,10 +51,10 @@ export function TaskForm({ onSubmit, initialTask = null, loading = false }: Prop
         maxLength={200}
         required
       />
-      <label className="flex flex-col gap-1 text-sm text-slate-200">
-        <span>Description</span>
+      <label className="flex flex-col gap-1 text-sm text-theme-secondary">
+        <span className="text-theme-primary">Description</span>
         <textarea
-          className="rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-slate-100 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+          className="task-textarea rounded-md px-3 py-2"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Optional description"

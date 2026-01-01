@@ -3,6 +3,7 @@
 import React from 'react';
 import { Task } from '@/lib/types';
 import { Button } from './Button';
+import { PriorityBadge } from './PriorityBadge';
 import clsx from 'clsx';
 
 type Props = {
@@ -14,20 +15,21 @@ type Props = {
 
 export function TaskItem({ task, onComplete, onEdit, onDelete }: Props) {
   return (
-    <div className="flex items-start justify-between gap-3 rounded-md border border-slate-800 bg-slate-900/60 p-4">
+    <div className="task-item flex items-start justify-between gap-3 rounded-md p-4">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
           <span
-            className={clsx('text-lg font-semibold', task.completed && 'line-through text-slate-400')}
+            className={clsx('task-title text-lg font-semibold', task.completed && 'line-through completed')}
           >
             {task.title}
           </span>
+          <PriorityBadge priority={task.priority} />
           {task.completed ? (
             <span className="rounded-full bg-green-500/20 px-2 py-0.5 text-xs text-green-200">Done</span>
           ) : null}
         </div>
         {task.description ? (
-          <p className="text-sm text-slate-300">{task.description}</p>
+          <p className="task-description text-sm">{task.description}</p>
         ) : null}
       </div>
       <div className="flex gap-2">

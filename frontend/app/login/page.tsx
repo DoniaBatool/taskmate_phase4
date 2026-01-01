@@ -34,8 +34,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Welcome back</h1>
-          <p className="text-sm text-slate-300">Log in to continue to your tasks.</p>
+          <h1 className="text-2xl font-semibold text-theme-primary">Welcome back</h1>
+          <p className="text-sm text-theme-secondary">Log in to continue to your tasks.</p>
         </div>
         {error ? <Alert variant="error">{error}</Alert> : null}
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -59,9 +59,9 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Log In'}
           </Button>
         </form>
-        <p className="text-sm text-slate-300">
+        <p className="text-sm text-theme-secondary">
           New here?{' '}
-          <button className="text-blue-300 hover:underline" onClick={() => router.push('/signup')}>
+          <button className="text-blue-400 hover:underline" onClick={() => router.push('/signup')}>
             Create an account
           </button>
         </p>

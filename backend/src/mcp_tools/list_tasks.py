@@ -1,6 +1,6 @@
 """MCP Tool: list_tasks
 
-Lists tasks for the authenticated user with optional status filtering.
+Lists tasks for the authenticated user with optional status and priority filtering.
 
 This tool enables AI agents to retrieve and display user tasks based on
 natural language queries.
@@ -20,12 +20,17 @@ class ListTasksParams(BaseModel):
     Attributes:
         user_id: ID of the authenticated user (for isolation)
         status: Filter by completion status ('all', 'pending', 'completed')
+        priority: Filter by priority level ('all', 'high', 'medium', 'low')
     """
 
     user_id: str = Field(..., description="User ID for task ownership")
     status: str = Field(
         "all",
         description="Filter by status: 'all', 'pending', or 'completed'"
+    )
+    priority: str = Field(
+        "all",
+        description="Filter by priority: 'all', 'high', 'medium', or 'low'"
     )
 
     @validator('status')
@@ -38,12 +43,23 @@ class ListTasksParams(BaseModel):
             )
         return v
 
+    @validator('priority')
+    def validate_priority(cls, v):
+        """Validate priority is one of allowed values."""
+        allowed = ["all", "high", "medium", "low"]
+        if v not in allowed:
+            raise ValueError(
+                f"Priority must be one of {allowed}, got '{v}'"
+            )
+        return v
+
     class Config:
         """Pydantic configuration."""
         json_schema_extra = {
             "example": {
                 "user_id": "user-123",
-                "status": "pending"
+                "status": "pending",
+                "priority": "high"
             }
         }
 
@@ -72,6 +88,7 @@ class ListTasksResult(BaseModel):
                         "title": "Buy milk",
                         "description": None,
                         "completed": False,
+                        "priority": "high",
                         "created_at": "2025-12-30T10:30:00Z"
                     },
                     {
@@ -79,6 +96,7 @@ class ListTasksResult(BaseModel):
                         "title": "Call mom",
                         "description": "Wish her happy birthday",
                         "completed": False,
+                        "priority": "medium",
                         "created_at": "2025-12-30T11:00:00Z"
                     }
                 ],
@@ -88,28 +106,32 @@ class ListTasksResult(BaseModel):
 
 
 def list_tasks(db: Session, params: ListTasksParams) -> ListTasksResult:
-    """List tasks for the user with optional status filtering.
+    """List tasks for the user with optional status and priority filtering.
 
     This is the core MCP tool function that AI agents call to retrieve tasks.
 
     Args:
         db: Database session
-        params: List parameters with user_id and status filter
+        params: List parameters with user_id, status filter, and priority filter
 
     Returns:
         ListTasksResult with tasks array and count
 
     Raises:
-        ValueError: If status validation fails
+        ValueError: If status or priority validation fails
+
+    Performance:
+        Uses composite index (user_id, priority) for efficient filtering (T026)
 
     Example:
         >>> params = ListTasksParams(
         ...     user_id="user-123",
-        ...     status="pending"
+        ...     status="pending",
+        ...     priority="high"
         ... )
         >>> result = list_tasks(db, params)
         >>> assert result.count >= 0
-        >>> assert all(not t["completed"] for t in result.tasks)
+        >>> assert all(not t["completed"] and t["priority"] == "high" for t in result.tasks)
     """
     # Build base query with user isolation (T082)
     query = select(Task).where(Task.user_id == params.user_id)
@@ -120,6 +142,11 @@ def list_tasks(db: Session, params: ListTasksParams) -> ListTasksResult:
     elif params.status == "completed":
         query = query.where(Task.completed == True)
     # For "all", no additional filter needed
+
+    # Apply priority filter if not "all" (T026)
+    # Uses composite index (user_id, priority) for optimal performance
+    if params.priority != "all":
+        query = query.where(Task.priority == params.priority)
 
     # Order by created_at descending (newest first)
     query = query.order_by(col(Task.created_at).desc())
@@ -137,6 +164,7 @@ def list_tasks(db: Session, params: ListTasksParams) -> ListTasksResult:
             "title": task.title,
             "description": task.description,
             "completed": task.completed,
+            "priority": task.priority,
             "created_at": task.created_at
         }
         for task in results

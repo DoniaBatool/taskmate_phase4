@@ -42,13 +42,14 @@ async def create_task(
             user_id=current_user_id,
             title=task_data.title,
             description=task_data.description,
+            priority=task_data.priority,
         )
-        
+
         # Add to database
         session.add(task)
         session.commit()
         session.refresh(task)
-        
+
         return task
     except Exception as e:
         session.rollback()
@@ -187,15 +188,17 @@ async def update_task(
             task.title = task_data.title
         if task_data.description is not None:
             task.description = task_data.description
-        
+        if task_data.priority is not None:
+            task.priority = task_data.priority
+
         # Update timestamp
         task.updated_at = datetime.utcnow()
-        
+
         # Save changes
         session.add(task)
         session.commit()
         session.refresh(task)
-        
+
         return task
     except Exception as e:
         session.rollback()

@@ -21,11 +21,26 @@ class AddTaskParams(BaseModel):
         user_id: ID of the authenticated user (for isolation)
         title: Task title (1-200 characters)
         description: Optional task description
+        priority: Task priority level (high, medium, low) - defaults to medium
     """
 
     user_id: str = Field(..., description="User ID for task ownership")
     title: str = Field(..., description="Task title (1-200 characters)")
     description: Optional[str] = Field(None, description="Optional task description")
+    priority: str = Field(
+        default="medium",
+        description="Task priority level (high, medium, low)"
+    )
+
+    @validator("priority")
+    def validate_priority(cls, v):
+        """Validate priority is one of the allowed values."""
+        allowed = ["high", "medium", "low"]
+        if v not in allowed:
+            raise ValueError(
+                f"Invalid priority: {v}. Must be one of: {', '.join(allowed)}"
+            )
+        return v
 
     class Config:
         """Pydantic configuration."""
@@ -33,7 +48,8 @@ class AddTaskParams(BaseModel):
             "example": {
                 "user_id": "user-123",
                 "title": "Buy milk",
-                "description": "Get 2% milk from grocery store"
+                "description": "Get 2% milk from grocery store",
+                "priority": "high"
             }
         }
 
@@ -46,6 +62,7 @@ class AddTaskResult(BaseModel):
         title: Task title
         description: Task description (if provided)
         completed: Task completion status (always False for new tasks)
+        priority: Task priority level (high, medium, low)
         created_at: Timestamp when task was created
     """
 
@@ -53,6 +70,7 @@ class AddTaskResult(BaseModel):
     title: str = Field(..., description="Task title")
     description: Optional[str] = Field(None, description="Task description")
     completed: bool = Field(False, description="Task completion status")
+    priority: str = Field(..., description="Task priority level")
     created_at: datetime = Field(..., description="Task creation timestamp")
 
     class Config:
@@ -63,6 +81,7 @@ class AddTaskResult(BaseModel):
                 "title": "Buy milk",
                 "description": "Get 2% milk from grocery store",
                 "completed": False,
+                "priority": "high",
                 "created_at": "2025-12-30T10:30:00Z"
             }
         }
@@ -107,6 +126,7 @@ def add_task(db: Session, params: AddTaskParams) -> AddTaskResult:
         user_id=params.user_id,
         title=title,
         description=params.description,
+        priority=params.priority,
         completed=False,
         created_at=datetime.utcnow()
     )
@@ -126,5 +146,6 @@ def add_task(db: Session, params: AddTaskParams) -> AddTaskResult:
         title=task.title,
         description=task.description,
         completed=task.completed,
+        priority=task.priority,
         created_at=task.created_at
     )

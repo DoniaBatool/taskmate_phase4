@@ -8,14 +8,18 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 class TaskCreate(BaseModel):
     """Request schema for creating a new task."""
-    
+
     title: str = Field(min_length=1, max_length=200, description="Task title")
     description: Optional[str] = Field(
         default=None,
         max_length=1000,
         description="Task description"
     )
-    
+    priority: str = Field(
+        default="medium",
+        description="Task priority (high, medium, low)"
+    )
+
     @field_validator("title")
     @classmethod
     def title_not_empty(cls, v: str) -> str:
@@ -23,7 +27,7 @@ class TaskCreate(BaseModel):
         if not v or v.strip() == "":
             raise ValueError("Title cannot be empty or whitespace")
         return v.strip()
-    
+
     @field_validator("description")
     @classmethod
     def description_length(cls, v: Optional[str]) -> Optional[str]:
@@ -32,10 +36,19 @@ class TaskCreate(BaseModel):
             raise ValueError("Description cannot exceed 1000 characters")
         return v
 
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, v: str) -> str:
+        """Validate priority is one of allowed values."""
+        allowed = ["high", "medium", "low"]
+        if v not in allowed:
+            raise ValueError(f"Priority must be one of {allowed}, got '{v}'")
+        return v
+
 
 class TaskUpdate(BaseModel):
     """Request schema for updating an existing task."""
-    
+
     title: Optional[str] = Field(
         default=None,
         min_length=1,
@@ -47,7 +60,11 @@ class TaskUpdate(BaseModel):
         max_length=1000,
         description="Updated task description"
     )
-    
+    priority: Optional[str] = Field(
+        default=None,
+        description="Updated task priority (high, medium, low)"
+    )
+
     @field_validator("title")
     @classmethod
     def title_not_empty(cls, v: Optional[str]) -> Optional[str]:
@@ -56,18 +73,29 @@ class TaskUpdate(BaseModel):
             raise ValueError("Title cannot be empty or whitespace")
         return v.strip() if v else v
 
+    @field_validator("priority")
+    @classmethod
+    def validate_priority(cls, v: Optional[str]) -> Optional[str]:
+        """Validate priority is one of allowed values if provided."""
+        if v is not None:
+            allowed = ["high", "medium", "low"]
+            if v not in allowed:
+                raise ValueError(f"Priority must be one of {allowed}, got '{v}'")
+        return v
+
 
 class TaskResponse(BaseModel):
     """Response schema for task data."""
-    
+
     id: int
     user_id: str
     title: str
     description: Optional[str]
     completed: bool
+    priority: str = Field(default="medium", description="Task priority (high, medium, low)")
     created_at: datetime
     updated_at: datetime
-    
+
     model_config = {"from_attributes": True}
 
 
