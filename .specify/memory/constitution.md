@@ -457,11 +457,22 @@ If no skill exists for required capability:
 3. ✅ THEN use the newly created skill
 4. ❌ NEVER implement manually if capability can be a skill
 
-### 📋 Complete Skills Reference (31 Available Skills)
+### 📋 Complete Skills Reference (42 Available Skills - EXPANDED!)
 
 **Location**: All skills are in `.claude/skills/` directory
 **Usage**: Invoke via `Skill` tool with skill name (e.g., `/sp.mcp-tool-builder`)
 **Requirement**: MUST be used for ALL applicable work in Phase III+
+**Total Categories**: 8 (added Modern Architecture category)
+
+---
+
+#### 0️⃣ Automation & Orchestration (1 skill - NEW!)
+
+| Skill | When to Use | Auto-Trigger | Output |
+|-------|-------------|--------------|--------|
+| `/sp.prompt-analyzer` | Analyzing user prompts to detect skills/agents | **EVERY user request** | Skills mapping, agent assignment, execution plan |
+
+**Purpose**: Automatically analyzes prompts and determines which skills and agents should be used, eliminating manual selection.
 
 ---
 
@@ -571,6 +582,37 @@ If no skill exists for required capability:
 **When user says**: "Document the API" → Use `/sp.api-docs-generator`
 **When user says**: "Modify existing feature X" → Use `/sp.change-management`
 **When user says**: "Create new skill for Y" → Use `/sp.skill-creator`
+
+---
+
+#### 8️⃣ 🆕 Modern Architecture Skills (10 skills - NEW!)
+
+| Skill | When to Use | Purpose | Output |
+|-------|-------------|---------|--------|
+| `/sp.caching-strategy` | Performance optimization with Redis/Memcached | API caching, session storage, rate limiting | Cache layer implementation, 10x performance boost |
+| `/sp.api-contract-design` | Contract-first API development | OpenAPI specifications, API versioning | OpenAPI specs, contract validation |
+| `/sp.message-queue-integration` | Async processing with RabbitMQ/Kafka | Background jobs, event-driven architecture | Queue setup, consumer/producer code |
+| `/sp.observability-apm` | Production monitoring and tracing | APM, distributed tracing, metrics | OpenTelemetry setup, Grafana dashboards |
+| `/sp.microservices-patterns` | Resilient microservices | Circuit breaker, saga, service mesh | Resilient communication patterns |
+| `/sp.infrastructure-as-code` | Infrastructure provisioning | Terraform, CloudFormation, Pulumi | IaC scripts, reproducible infrastructure |
+| `/sp.feature-flags-management` | Feature toggles and gradual rollouts | A/B testing, canary releases, kill switches | Feature flag service, toggle configs |
+| `/sp.websocket-realtime` | Real-time bidirectional communication | Chat, live dashboards, notifications | WebSocket server, real-time features |
+| `/sp.graphql-api` | Flexible API alternative to REST | Client-specified queries, subscriptions | GraphQL schema, resolvers |
+| `/sp.container-orchestration` | Kubernetes deployment | Production container management, auto-scaling | K8s manifests, Helm charts |
+
+**When user says**: "Add caching for performance" → Use `/sp.caching-strategy`
+**When user says**: "Design API contract" → Use `/sp.api-contract-design`
+**When user says**: "Add real-time chat" → Use `/sp.websocket-realtime`
+**When user says**: "Deploy to Kubernetes" → Use `/sp.container-orchestration`
+**When user says**: "Add message queue" → Use `/sp.message-queue-integration`
+
+**Enterprise Capabilities Unlocked:**
+- ✅ Cloud-native architecture
+- ✅ Microservices patterns
+- ✅ Real-time features
+- ✅ Production observability
+- ✅ Modern deployment strategies
+- ✅ Event-driven systems
 
 ---
 
@@ -787,4 +829,392 @@ Before considering ANY Phase III+ feature complete:
 
 ---
 
-**Version**: 4.0.0 | **Ratified**: 2025-12-09 | **Last Amended**: 2025-12-31 (Phase III Skills Policy Added)
+## 🏭 Digital Agent Factory: Full-Time Equivalent (FTE) AI Agents (MANDATORY)
+
+### ⚠️ CRITICAL REQUIREMENT - AGENT-FIRST DEVELOPMENT
+
+**THIS IS A RELIGIOUS ENFORCEMENT POLICY - NON-NEGOTIABLE**
+
+Starting from Phase III and beyond, ALL development work MUST be performed using the appropriate FTE (Full-Time Equivalent) AI Agents from the Digital Agent Factory. Manual implementation without agent usage is a VIOLATION.
+
+### 🤖 16 Full-Time Equivalent AI Agents (EXPANDED!)
+
+**Location**: All agents are in `.claude/agents/` directory
+**Documentation**: `.claude/agents/README.md`
+**Total Skills Available**: 42 skills (expanded from 32)
+**Usage**: Select appropriate agent(s) based on the task domain
+
+#### Orchestration (1 Agent)
+
+| Agent | Skills | When to Use |
+|-------|--------|-------------|
+| **orchestrator** | All 42 skills | AUTO-TRIGGERS on every request - analyzes prompts and delegates to specialists |
+
+#### Backend Specialists (5 Agents)
+
+| Agent | Skills | When to Use |
+|-------|--------|-------------|
+| **backend-developer** | 11 skills | Backend APIs, MCP tools, authentication, business logic |
+| **database-engineer** | 4 skills | Database design, migrations, query optimization, indexes |
+| **security-engineer** | 5 skills | OWASP compliance, security audits, penetration testing |
+| **qa-engineer** | 3 skills | Testing (unit, integration, E2E), edge cases, quality assurance |
+| **devops-engineer** | 4 skills | Infrastructure, deployment, monitoring, CI/CD |
+
+#### Frontend Specialists (3 Agents)
+
+| Agent | Skills | When to Use |
+|-------|--------|-------------|
+| **frontend-developer** | 6 skills | React, Next.js, TypeScript, Tailwind CSS, UI components, real-time features |
+| **uiux-designer** | 2 skills | UI/UX design, design systems, accessibility, user flows |
+| **vercel-deployer** | 4 skills | Vercel deployment, Next.js optimization, Edge Functions |
+
+#### Cross-Cutting Specialists (2 Agents)
+
+| Agent | Skills | When to Use |
+|-------|--------|-------------|
+| **fullstack-architect** | 8 skills | System design, architecture decisions, feature planning |
+| **github-specialist** | 3 skills | Git workflows, CI/CD, code review, branch management |
+
+#### 🆕 NEW Enterprise Specialists (5 Agents)
+
+| Agent | Skills | When to Use |
+|-------|--------|-------------|
+| **data-engineer** | 7 skills | Data pipelines (ETL/ELT), analytics, data warehouse, BI integration |
+| **technical-writer** | 4 skills | Documentation, user guides, API reference, tutorials, release notes |
+| **cloud-architect** | 7 skills | Cloud infrastructure (AWS/GCP/Azure), Kubernetes, IaC (Terraform) |
+| **api-architect** | 6 skills | API contract design, REST/GraphQL/gRPC, microservices, API versioning |
+| **product-manager** | 4 skills | Requirements gathering, user stories, roadmap planning, prioritization |
+
+### 🚨 ABSOLUTE AGENT REQUIREMENTS (MUST FOLLOW)
+
+#### 1. Agent Selection Is MANDATORY
+Before ANY work:
+- ✅ **REQUIRED**: Identify which agent(s) are appropriate for the task
+- ✅ **REQUIRED**: Use agent's available skills for implementation
+- ❌ **VIOLATION**: Working without selecting appropriate agent
+- ❌ **VIOLATION**: Manual implementation when agent exists
+
+#### 2. Agent-Skill Integration
+Each agent has specific skills available:
+- ✅ **backend-developer** → Can use jwt-authentication, mcp-tool-builder, database-schema-expander, etc.
+- ✅ **frontend-developer** → Can use vercel-deployer, ab-testing, uiux-designer
+- ✅ **security-engineer** → Can use jwt-authentication, password-security, user-isolation, edge-case-tester
+- ✅ **fullstack-architect** → Can use all agent skills for system design
+
+#### 3. Agent Workflow Pattern
+For every task, follow this pattern:
+
+```text
+1. 🎯 IDENTIFY TASK DOMAIN
+   Backend API? → /backend-developer
+   Database work? → /database-engineer
+   Frontend UI? → /frontend-developer
+   Architecture? → /fullstack-architect
+   Security? → /security-engineer
+   Testing? → /qa-engineer
+   Deployment? → /devops-engineer or /vercel-deployer
+
+2. 🔧 SELECT AGENT AND SKILLS
+   Agent: /backend-developer
+   Skills available:
+     - /sp.mcp-tool-builder
+     - /sp.jwt-authentication
+     - /sp.pydantic-validation
+     - ... (8 more)
+
+3. 📋 DISPLAY AGENT PLAN
+   Using Agent: /backend-developer
+   Skills Plan:
+     1. /sp.mcp-tool-builder → Create add_task tool
+     2. /sp.pydantic-validation → Request/response DTOs
+     3. /sp.edge-case-tester → Comprehensive testing
+
+   Waiting for approval... ✋
+
+4. ✅ EXECUTE WITH AGENT'S SKILLS
+   [Agent invokes skills sequentially]
+
+5. 📊 REPORT AGENT USAGE
+   [Document in PHR which agent was used]
+```
+
+### 🎯 Agent Usage Examples (Common Scenarios)
+
+#### Example 1: Add Authentication
+```text
+Task: Implement user authentication
+
+Agent Pipeline:
+1. /fullstack-architect → Design auth architecture
+2. /security-engineer → Design security strategy
+3. /backend-developer → Implement JWT + password hashing
+4. /database-engineer → Users table with user isolation
+5. /qa-engineer → Security edge case testing
+6. /devops-engineer → Environment variables setup
+
+Skills Used:
+- jwt-authentication
+- password-security
+- user-isolation
+- database-schema-expander
+- edge-case-tester
+```
+
+#### Example 2: Build AI Chatbot
+```text
+Task: Add AI chatbot functionality
+
+Agent Pipeline:
+1. /fullstack-architect → Plan chatbot architecture
+2. /database-engineer → Conversations + Messages tables
+3. /backend-developer → Build 5 MCP tools + chat endpoint
+4. /frontend-developer → Chat UI components
+5. /security-engineer → Security audit
+6. /qa-engineer → Comprehensive testing
+
+Skills Used:
+- mcp-tool-builder (5x)
+- ai-agent-setup
+- chatbot-endpoint
+- conversation-manager
+- database-schema-expander
+- edge-case-tester
+```
+
+#### Example 3: Deploy to Production
+```text
+Task: Production deployment
+
+Agent Pipeline:
+1. /security-engineer → Security audit (OWASP)
+2. /database-engineer → Connection pooling check
+3. /devops-engineer → Structured logging + monitoring
+4. /qa-engineer → Production checklist + smoke tests
+5. /vercel-deployer → Frontend deployment to Vercel
+6. /github-specialist → Create release tag
+
+Skills Used:
+- connection-pooling
+- structured-logging
+- performance-logger
+- production-checklist
+- deployment-automation
+- vercel-deployer
+```
+
+### 📋 Agent Documentation Reference
+
+Each agent has:
+- ✅ YAML frontmatter with name, role, description, skills, expertise
+- ✅ Core responsibilities clearly defined
+- ✅ Available skills list with purpose
+- ✅ Workflow guidelines
+- ✅ Best practices and checklists
+- ✅ Constitution compliance enforcement
+
+**View agent details:**
+```bash
+# Backend agent
+cat .claude/agents/backend-developer.md
+
+# Frontend agent
+cat .claude/agents/frontend-developer.md
+
+# Architecture agent
+cat .claude/agents/fullstack-architect.md
+
+# All agents
+cat .claude/agents/README.md
+```
+
+### 🚨 Agent-First Development Enforcement
+
+#### PASS ✅ - Agent-Based Implementation
+```text
+User: "Add task management API endpoints"
+
+Claude:
+  🎯 Task Domain: Backend API Development
+
+  Using Agent: /backend-developer
+
+  Skills Plan:
+  1. /sp.pydantic-validation → Request/response DTOs
+  2. /sp.database-schema-expander → Tasks table
+  3. /sp.user-isolation → User-specific queries
+  4. /sp.api-docs-generator → OpenAPI docs
+  5. /sp.edge-case-tester → Edge case testing
+
+  Waiting for approval... ✋
+
+[After approval]
+  🔧 Using Skill: /sp.pydantic-validation
+  Purpose: Create request/response DTOs
+  ✅ Skill Complete
+
+  🔧 Using Skill: /sp.database-schema-expander
+  Purpose: Create Tasks table with migration
+  ✅ Skill Complete
+
+  [... continues with all skills ...]
+```
+
+#### FAIL ❌ - Manual Implementation Without Agent (VIOLATION)
+```text
+User: "Add task management API endpoints"
+
+Claude: [Creates routes/tasks.py and models.py manually without using agent]
+
+❌ VIOLATION: Manual implementation without agent selection
+❌ VIOLATION: No skill usage from agent's toolkit
+✅ CORRECT: Select /backend-developer agent, use its skills
+```
+
+### 🎓 Why Agents Are MANDATORY (Religious Enforcement)
+
+**Agents are religiously enforced because:**
+
+1. **Specialized Expertise**: Each agent brings domain-specific knowledge
+   - Backend agent knows FastAPI, SQLModel, authentication patterns
+   - Frontend agent knows Next.js, TypeScript, Tailwind CSS patterns
+   - Security agent knows OWASP Top 10, security best practices
+
+2. **Skill Integration**: Agents have curated skill sets
+   - Backend agent has 11 skills (jwt-auth, mcp-tools, database, etc.)
+   - Each skill enforces constitution principles automatically
+
+3. **Workflow Consistency**: Agents follow established workflows
+   - Backend agent: Design → Implement → Test → Document
+   - Frontend agent: Design → Component → Style → Test
+
+4. **Quality Assurance**: Agents enforce best practices
+   - Security agent: OWASP compliance checks
+   - QA agent: 57+ edge case scenarios
+   - DevOps agent: Production readiness validation
+
+5. **Constitution Compliance**: Agents enforce project principles
+   - Stateless architecture
+   - User isolation
+   - MCP-first design
+   - Database-centric state
+
+6. **Traceability**: Clear audit trail
+   - Which agent was used
+   - Which skills were invoked
+   - Why those choices were made
+
+### 🚫 Agent Violations
+
+**Violations include:**
+- ❌ Working without identifying appropriate agent
+- ❌ Manual implementation when agent exists for domain
+- ❌ Not using agent's available skills
+- ❌ Skipping agent selection step
+- ❌ Not documenting which agent was used in PHR
+- ❌ Agent plan not shown in terminal
+
+**Consequences:**
+- ⚠️ Work must be redone using appropriate agent
+- ⚠️ Agent usage must be documented retroactively
+- ⚠️ Constitution updated to prevent future violations
+
+### ✅ Agent-Based Development Checklist
+
+Before considering ANY work complete:
+- [ ] Appropriate agent(s) identified for task domain
+- [ ] Agent's available skills reviewed
+- [ ] Agent + skills plan displayed in terminal
+- [ ] User approval obtained
+- [ ] Agent's skills invoked sequentially
+- [ ] Agent usage documented in PHR
+- [ ] Skills from agent's toolkit used (not manual work)
+- [ ] Constitution principles enforced via agent
+
+### 🔗 Agent + Skills Integration
+
+**The Complete Flow:**
+```
+User Request
+    ↓
+1. Select Agent (based on domain)
+    ↓
+2. Agent identifies relevant skills
+    ↓
+3. Display Agent + Skills Plan
+    ↓
+4. Wait for approval
+    ↓
+5. Agent invokes skills sequentially
+    ↓
+6. Skills enforce constitution
+    ↓
+7. Report agent + skills usage
+    ↓
+Complete ✅
+```
+
+**Example:**
+```text
+User: "Optimize database queries"
+
+Agent Selection: /database-engineer (domain: database)
+
+Agent's Skills:
+- connection-pooling
+- transaction-management
+- database-schema-expander
+- user-isolation
+
+Skills Plan:
+1. /sp.connection-pooling → Optimize connection pool
+2. /sp.transaction-management → Review transaction patterns
+
+[Execute skills via database-engineer agent]
+```
+
+### 📊 Agent Usage Tracking (MANDATORY)
+
+**PHR Template Requirement:**
+```yaml
+agent_used:
+  name: /backend-developer
+  domain: Backend API Development
+  skills_available: 11
+  skills_invoked:
+    - jwt-authentication
+    - mcp-tool-builder
+    - edge-case-tester
+  reason: Building MCP tools for AI agent
+
+agent_workflow:
+  - step: Design API contracts
+  - step: Implement MCP tools
+  - step: Add user isolation
+  - step: Comprehensive testing
+
+constitution_compliance:
+  - Stateless architecture: ✅
+  - User isolation: ✅
+  - MCP-first design: ✅
+```
+
+### 🎯 Quick Agent Reference
+
+| Task Domain | Use This Agent | Example Task |
+|-------------|----------------|--------------|
+| Backend API | backend-developer | Add REST endpoint |
+| Database | database-engineer | Create migration |
+| Security | security-engineer | Security audit |
+| Frontend UI | frontend-developer | Create component |
+| UI/UX Design | uiux-designer | Design system |
+| Architecture | fullstack-architect | Plan feature |
+| Testing | qa-engineer | Write tests |
+| Deployment | devops-engineer | Deploy backend |
+| Vercel | vercel-deployer | Deploy frontend |
+| Git/GitHub | github-specialist | Merge branches |
+
+**Remember: ALWAYS use agents. ALWAYS use their skills. This is MANDATORY and religiously enforced.**
+
+---
+
+**Version**: 5.0.0 | **Ratified**: 2025-12-09 | **Last Amended**: 2026-01-06 (Enterprise Expansion: 16 Agents, 42 Skills, Modern Architecture)
