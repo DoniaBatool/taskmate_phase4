@@ -19,6 +19,10 @@ class TaskCreate(BaseModel):
         default="medium",
         description="Task priority (high, medium, low)"
     )
+    due_date: Optional[datetime] = Field(
+        default=None,
+        description="Task due date and time (optional)"
+    )
 
     @field_validator("title")
     @classmethod
@@ -64,6 +68,10 @@ class TaskUpdate(BaseModel):
         default=None,
         description="Updated task priority (high, medium, low)"
     )
+    due_date: Optional[datetime] = Field(
+        default=None,
+        description="Updated task due date and time (optional)"
+    )
 
     @field_validator("title")
     @classmethod
@@ -93,6 +101,7 @@ class TaskResponse(BaseModel):
     description: Optional[str]
     completed: bool
     priority: str = Field(default="medium", description="Task priority (high, medium, low)")
+    due_date: Optional[datetime] = Field(default=None, description="Task due date and time")
     created_at: datetime
     updated_at: datetime
 

@@ -109,6 +109,10 @@ class Task(SQLModel, table=True):
         ),
         description="Task priority level (high, medium, low)"
     )
+    due_date: Optional[datetime] = Field(
+        default=None,
+        description="Task due date and time (optional)"
+    )
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
         description="Task creation timestamp"

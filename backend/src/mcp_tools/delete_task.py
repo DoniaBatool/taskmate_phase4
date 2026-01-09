@@ -8,8 +8,11 @@ natural language input.
 
 from pydantic import BaseModel, Field
 from sqlmodel import Session, select
+import logging
 
 from ..models import Task
+
+logger = logging.getLogger(__name__)
 
 
 class DeleteTaskParams(BaseModel):
@@ -84,6 +87,11 @@ def delete_task(db: Session, params: DeleteTaskParams) -> DeleteTaskResult:
         >>> result = delete_task(db, params)
         >>> assert result.success is True
     """
+    logger.info(
+        f"delete_task: Querying task {params.task_id} for user {params.user_id}",
+        extra={"user_id": params.user_id, "task_id": params.task_id}
+    )
+
     # Query task with user_id AND task_id
     # This enforces user isolation
     query = select(Task).where(
@@ -94,10 +102,15 @@ def delete_task(db: Session, params: DeleteTaskParams) -> DeleteTaskResult:
     try:
         result = db.exec(query).first()
     except Exception as e:
+        logger.error(f"delete_task: Query failed: {str(e)}", exc_info=True)
         raise RuntimeError(f"Failed to query task: {str(e)}") from e
 
     # Handle task not found
     if not result:
+        logger.warning(
+            f"delete_task: Task {params.task_id} not found for user {params.user_id}",
+            extra={"user_id": params.user_id, "task_id": params.task_id}
+        )
         raise ValueError("Task not found")
 
     task = result
@@ -106,11 +119,25 @@ def delete_task(db: Session, params: DeleteTaskParams) -> DeleteTaskResult:
     task_title = task.title
     task_id = task.id
 
+    logger.info(
+        f"delete_task: Found task - id={task_id}, title={task_title}",
+        extra={"user_id": params.user_id, "task_id": task_id, "task_title": task_title}
+    )
+
     # Delete task
     try:
         db.delete(task)
         db.commit()
+        logger.info(
+            f"delete_task: Successfully deleted task {task_id} from database",
+            extra={"user_id": params.user_id, "task_id": task_id, "task_title": task_title}
+        )
     except Exception as e:
+        logger.error(
+            f"delete_task: Commit failed for task {task_id}: {str(e)}",
+            extra={"user_id": params.user_id, "task_id": task_id},
+            exc_info=True
+        )
         db.rollback()
         raise RuntimeError(f"Failed to delete task: {str(e)}") from e
 

@@ -6,6 +6,7 @@ import { Alert } from '@/components/Alert';
 import { Card } from '@/components/Card';
 import { TaskForm } from '@/components/TaskForm';
 import { TaskItem } from '@/components/TaskItem';
+import { TaskTable } from '@/components/TaskTable';
 import { Header } from '@/components/Header';
 import { apiFetch, AuthError } from '@/lib/api';
 import { clearToken, getToken } from '@/lib/auth';
@@ -18,6 +19,7 @@ export default function TasksPage() {
   const [error, setError] = useState<string | null>(null);
   const [actioning, setActioning] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'table'>('table'); // Default to table view
 
   const hasToken = useMemo(() => !!getToken(), []);
 
@@ -48,7 +50,7 @@ export default function TasksPage() {
     }
   }
 
-  async function handleCreate(payload: { title: string; description?: string }) {
+  async function handleCreate(payload: { title: string; description?: string; priority?: string }) {
     setActioning(true);
     setError(null);
     try {
@@ -69,7 +71,7 @@ export default function TasksPage() {
     }
   }
 
-  async function handleUpdate(payload: { title: string; description?: string }) {
+  async function handleUpdate(payload: { title: string; description?: string; priority?: string }) {
     if (!editing) return;
     setActioning(true);
     setError(null);
@@ -164,12 +166,42 @@ export default function TasksPage() {
         <Card className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-theme-primary">Task list</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-theme-secondary">View:</span>
+              <button
+                onClick={() => setViewMode('table')}
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                  viewMode === 'table'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-theme-surface text-theme-secondary hover:bg-theme-border'
+                }`}
+              >
+                Table
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-theme-surface text-theme-secondary hover:bg-theme-border'
+                }`}
+              >
+                List
+              </button>
+            </div>
             {loading ? <span className="text-sm text-theme-tertiary">Loading...</span> : null}
           </div>
           {loading ? (
             <p className="text-theme-secondary">Fetching tasks...</p>
           ) : tasks.length === 0 ? (
             <p className="text-theme-secondary">No tasks yet. Add your first task above.</p>
+          ) : viewMode === 'table' ? (
+            <TaskTable
+              tasks={tasks}
+              onComplete={handleComplete}
+              onEdit={setEditing}
+              onDelete={handleDelete}
+            />
           ) : (
             <div className="space-y-3">
               {tasks.map((task) => (

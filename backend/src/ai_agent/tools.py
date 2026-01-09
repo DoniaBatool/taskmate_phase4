@@ -66,6 +66,28 @@ def get_tool_definitions() -> List[Dict[str, Any]]:
                                 "Use when user provides extra context. "
                                 "Example: 'quarterly sales report for Q4'."
                             )
+                        },
+                        "priority": {
+                            "type": "string",
+                            "enum": ["high", "medium", "low"],
+                            "description": (
+                                "Task priority level. CRITICAL: Extract from user's message. "
+                                "Keywords mapping (YOU MUST USE THESE EXACTLY): "
+                                "'urgent', 'critical', 'important', 'ASAP', 'high priority' → 'high', "
+                                "'normal', 'medium priority' → 'medium', "
+                                "'minor', 'trivial', 'low priority', 'someday' → 'low'. "
+                                "ONLY use default 'medium' if NO priority keyword found in message. "
+                                "If user says 'high priority', you MUST return 'high', NOT 'medium'!"
+                            )
+                        },
+                        "due_date": {
+                            "type": "string",
+                            "description": (
+                                "Task due date and time in ISO 8601 format (e.g., '2026-01-15T14:30:00'). "
+                                "Extract from user's message if they mention: "
+                                "'tomorrow', 'next week', 'by Friday', 'at 3pm', specific dates/times. "
+                                "Optional - only include if user specifies a deadline."
+                            )
                         }
                     },
                     "required": ["user_id", "title"]
@@ -170,6 +192,25 @@ def get_tool_definitions() -> List[Dict[str, Any]]:
                         "description": {
                             "type": "string",
                             "description": "New task description (optional, provide if user wants to change description)"
+                        },
+                        "priority": {
+                            "type": "string",
+                            "enum": ["high", "medium", "low"],
+                            "description": (
+                                "New task priority (optional, provide if user wants to change priority). "
+                                "Extract from user's message using keywords: "
+                                "'high priority', 'urgent', 'important' → 'high', "
+                                "'medium priority', 'normal' → 'medium', "
+                                "'low priority', 'minor' → 'low'. "
+                                "If user says 'change to high priority', you MUST use 'high'!"
+                            )
+                        },
+                        "due_date": {
+                            "type": "string",
+                            "description": (
+                                "New task due date and time in ISO 8601 format (optional). "
+                                "Provide if user wants to change or set deadline."
+                            )
                         }
                     },
                     "required": ["user_id", "task_id"]
@@ -204,6 +245,34 @@ def get_tool_definitions() -> List[Dict[str, Any]]:
                         }
                     },
                     "required": ["user_id", "task_id"]
+                }
+            }
+        },
+        # find_task tool for task lookup by title
+        {
+            "type": "function",
+            "function": {
+                "name": "find_task",
+                "description": (
+                    "Find a task by its title for the authenticated user. "
+                    "Use this when the user refers to a task by name/title instead of ID, "
+                    "especially when they want to update or delete a task. "
+                    "Examples: 'Find the task about buy book', 'Look up task titled Buy milk', "
+                    "'Search for task Call mom'."
+                ),
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "user_id": {
+                            "type": "string",
+                            "description": "ID of the authenticated user (automatically provided)"
+                        },
+                        "title": {
+                            "type": "string",
+                            "description": "Task title to search for (case-insensitive partial match)"
+                        }
+                    },
+                    "required": ["user_id", "title"]
                 }
             }
         }

@@ -2,18 +2,124 @@
 
 This module handles the execution of the AI agent with conversation history
 and user messages, orchestrating tool calls and response generation.
+
+Enhanced with:
+- Natural language date parsing
+- Batch operation detection
+- Smart priority suggestions
+- Fuzzy task lookup
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import logging
+from datetime import datetime
 
 from openai import OpenAI
 
 from .agent import initialize_agent, get_system_prompt
 from .tools import register_tools
+from ..mcp_tools.find_task import find_task, FindTaskParams
 from ..utils.performance import log_execution_time, track_performance
+from .utils import (
+    parse_natural_date,
+    detect_batch_operation,
+    suggest_priority_from_keywords,
+    validate_task_data
+)
 
 logger = logging.getLogger(__name__)
+
+
+def enhance_tool_parameters(
+    tool_name: str,
+    params: Dict[str, Any],
+    user_message: str
+) -> Dict[str, Any]:
+    """Enhance tool parameters with intelligent preprocessing.
+
+    Features:
+    - Parse natural language dates to ISO format
+    - Auto-suggest priority from keywords
+    - Validate task data
+
+    Args:
+        tool_name: Name of the tool being called
+        params: Original tool parameters
+        user_message: Original user message for context
+
+    Returns:
+        Enhanced parameters dictionary
+    """
+    enhanced_params = params.copy()
+
+    # Natural Language Date Parsing for add_task and update_task
+    if tool_name in ['add_task', 'update_task']:
+        # Parse due_date if present as string
+        if 'due_date' in params and isinstance(params['due_date'], str):
+            date_str = params['due_date']
+            parsed_date = parse_natural_date(date_str)
+
+            if parsed_date:
+                enhanced_params['due_date'] = parsed_date.isoformat()
+                logger.info(
+                    f"Parsed natural date '{date_str}' → {enhanced_params['due_date']}"
+                )
+            else:
+                logger.warning(f"Failed to parse date: '{date_str}'")
+                # Keep original value, let tool validation handle it
+
+        # Auto-suggest priority for add_task if not provided
+        if tool_name == 'add_task' and 'priority' not in params:
+            title = params.get('title', '')
+            description = params.get('description', '')
+            suggested_priority = suggest_priority_from_keywords(title, description)
+
+            if suggested_priority != 'medium':
+                enhanced_params['priority'] = suggested_priority
+                logger.info(
+                    f"Auto-suggested priority '{suggested_priority}' from keywords"
+                )
+
+        # Validate task data
+        title = params.get('title') if tool_name == 'add_task' else None
+        due_date_obj = None
+        if 'due_date' in enhanced_params and isinstance(enhanced_params['due_date'], str):
+            try:
+                due_date_obj = datetime.fromisoformat(enhanced_params['due_date'])
+            except:
+                pass
+
+        is_valid, error_msg = validate_task_data(title=title, due_date=due_date_obj)
+        if not is_valid:
+            logger.warning(f"Task validation failed: {error_msg}")
+            # Return params with validation warning
+            enhanced_params['_validation_warning'] = error_msg
+
+    return enhanced_params
+
+
+def detect_batch_request(message: str) -> Optional[Dict[str, Any]]:
+    """Detect if user message requests a batch operation.
+
+    Args:
+        message: User message
+
+    Returns:
+        Batch operation dict or None
+
+    Examples:
+        "delete all completed tasks" → {"operation": "delete", "filter": "completed"}
+        "mark all high priority as done" → {"operation": "complete", "filter": "high"}
+    """
+    batch_op = detect_batch_operation(message)
+
+    if batch_op:
+        logger.info(
+            f"Detected batch operation: {batch_op['operation']} "
+            f"for filter: {batch_op.get('filter', 'all')}"
+        )
+
+    return batch_op
 
 
 class AgentResponse:
@@ -77,6 +183,16 @@ async def run_agent(
 
             client = initialize_agent(tools)
 
+        # Detect batch operations before sending to agent
+        batch_operation = detect_batch_request(message)
+        if batch_operation:
+            logger.info(
+                f"Batch operation detected for user {user_id}: "
+                f"{batch_operation['operation']} with filter {batch_operation.get('filter')}"
+            )
+            # Add context to system prompt for batch handling
+            # Agent will use list_tasks + multiple delete/complete calls
+
         # Build messages array with system prompt + history + new message
         with track_performance("agent_message_preparation", user_id):
             messages = [{"role": "system", "content": get_system_prompt()}]
@@ -104,12 +220,63 @@ async def run_agent(
             # Extract tool calls if any
             tool_calls_data = []
             if response_message.tool_calls:
+                import json
                 for tool_call in response_message.tool_calls:
-                    import json
+                    tool_name = tool_call.function.name
+                    raw_params = json.loads(tool_call.function.arguments)
+
+                    # Enhance parameters with intelligent preprocessing
+                    enhanced_params = enhance_tool_parameters(
+                        tool_name=tool_name,
+                        params=raw_params,
+                        user_message=message
+                    )
+
+                    # Check for validation warnings
+                    if '_validation_warning' in enhanced_params:
+                        logger.warning(
+                            f"Tool parameter validation warning: "
+                            f"{enhanced_params.pop('_validation_warning')}"
+                        )
+
                     tool_calls_data.append({
-                        "tool": tool_call.function.name,
-                        "params": json.loads(tool_call.function.arguments)
+                        "tool": tool_name,
+                        "params": enhanced_params
                     })
+
+                    logger.info(
+                        f"Enhanced tool call: {tool_name} with params: "
+                        f"{list(enhanced_params.keys())}"
+                    )
+
+            # CRITICAL FIX: Generate response if empty but tools were called
+            if not response_text.strip() and tool_calls_data:
+                # Generate generic confirmation based on tool type
+                tool_name = tool_calls_data[0]['tool']
+                tool_params = tool_calls_data[0]['params']
+
+                if tool_name == 'add_task':
+                    title = tool_params.get('title', 'task')
+                    priority = tool_params.get('priority', 'medium')
+                    response_text = f"I've added '{title}' to your tasks with {priority} priority."
+                elif tool_name == 'list_tasks':
+                    response_text = "Here are your tasks:"
+                elif tool_name == 'complete_task':
+                    task_id = tool_params.get('task_id', '')
+                    response_text = f"I've marked task {task_id} as complete."
+                elif tool_name == 'update_task':
+                    task_id = tool_params.get('task_id', '')
+                    response_text = f"I've updated task {task_id}."
+                elif tool_name == 'delete_task':
+                    task_id = tool_params.get('task_id', '')
+                    response_text = f"I've removed task {task_id} from your tasks."
+                else:
+                    response_text = "Done! Let me know if you need anything else."
+
+                logger.warning(
+                    f"Generated fallback response for empty AI response with tool calls",
+                    extra={"user_id": user_id, "tool": tool_name}
+                )
 
             logger.info(
                 f"Agent response for user {user_id}: "

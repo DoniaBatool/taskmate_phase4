@@ -3,6 +3,7 @@
 Provides stateless chat endpoint for AI-powered task management conversations.
 """
 
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -18,6 +19,7 @@ from ..mcp_tools.list_tasks import list_tasks, ListTasksParams
 from ..mcp_tools.complete_task import complete_task, CompleteTaskParams
 from ..mcp_tools.update_task import update_task, UpdateTaskParams
 from ..mcp_tools.delete_task import delete_task, DeleteTaskParams
+from ..mcp_tools.find_task import find_task, FindTaskParams
 from ..utils.performance import log_execution_time, track_performance
 import logging
 import json
@@ -354,18 +356,38 @@ async def chat(
 
         # Execute tool calls if any
         executed_tools = []
+        seen_tool_calls = set()  # Track tool call signatures for deduplication
+
         if hasattr(agent_response, 'tool_calls') and agent_response.tool_calls:
             for tool_call in agent_response.tool_calls:
                 tool_name = tool_call.get('tool')
                 tool_params = tool_call.get('params', {})
 
+                # Create signature for deduplication (exclude user_id)
+                import json
+                param_copy = {k: v for k, v in tool_params.items() if k != 'user_id'}
+                tool_signature = f"{tool_name}:{json.dumps(param_copy, sort_keys=True)}"
+
+                # Skip if we've already executed this exact tool call
+                if tool_signature in seen_tool_calls:
+                    logger.warning(
+                        f"Skipping duplicate tool call: {tool_signature}",
+                        extra={"user_id": user_id, "tool": tool_name}
+                    )
+                    continue
+
+                seen_tool_calls.add(tool_signature)
+
                 if tool_name == 'add_task':
                     # Execute add_task tool
                     try:
+                        # Pass due_date as string - add_task tool will parse it
                         params = AddTaskParams(
                             user_id=user_id,
                             title=tool_params.get('title'),
-                            description=tool_params.get('description')
+                            description=tool_params.get('description'),
+                            priority=tool_params.get('priority', 'medium'),
+                            due_date=tool_params.get('due_date')  # Pass as string
                         )
                         result = add_task(db, params)
                         executed_tools.append({
@@ -375,6 +397,8 @@ async def chat(
                                 'task_id': result.task_id,
                                 'title': result.title,
                                 'description': result.description,
+                                'priority': result.priority,
+                                'due_date': result.due_date.isoformat() if result.due_date else None,
                                 'completed': result.completed,
                                 'created_at': result.created_at.isoformat()
                             }
@@ -400,6 +424,8 @@ async def chat(
                                         'task_id': task['task_id'],
                                         'title': task['title'],
                                         'description': task['description'],
+                                        'priority': task['priority'],
+                                        'due_date': task['due_date'].isoformat() if task.get('due_date') else None,
                                         'completed': task['completed'],
                                         'created_at': task['created_at'].isoformat()
                                     }
@@ -427,6 +453,8 @@ async def chat(
                                 'task_id': result.task_id,
                                 'title': result.title,
                                 'description': result.description,
+                                'priority': result.priority,
+                                'due_date': result.due_date.isoformat() if result.due_date else None,
                                 'completed': result.completed,
                                 'updated_at': result.updated_at.isoformat()
                             }
@@ -438,13 +466,43 @@ async def chat(
                 elif tool_name == 'update_task':
                     # Execute update_task tool
                     try:
+                        logger.info(
+                            f"Executing update_task for user {user_id}",
+                            extra={
+                                "user_id": user_id,
+                                "task_id": tool_params.get('task_id'),
+                                "params": tool_params
+                            }
+                        )
+
+                        # Parse due_date if provided
+                        due_date = None
+                        due_date_str = tool_params.get('due_date')
+                        if due_date_str:
+                            try:
+                                due_date = datetime.fromisoformat(due_date_str)
+                            except (ValueError, TypeError):
+                                logger.warning(f"Invalid due_date format: {due_date_str}")
+
                         params = UpdateTaskParams(
                             user_id=user_id,
                             task_id=tool_params.get('task_id'),
                             title=tool_params.get('title'),
-                            description=tool_params.get('description')
+                            description=tool_params.get('description'),
+                            priority=tool_params.get('priority'),
+                            due_date=due_date
                         )
                         result = update_task(db, params)
+
+                        logger.info(
+                            f"update_task succeeded: task_id={result.task_id}, title={result.title}",
+                            extra={
+                                "user_id": user_id,
+                                "task_id": result.task_id,
+                                "updated_fields": {k: v for k, v in tool_params.items() if v is not None}
+                            }
+                        )
+
                         executed_tools.append({
                             'tool': 'update_task',
                             'params': tool_params,
@@ -452,22 +510,51 @@ async def chat(
                                 'task_id': result.task_id,
                                 'title': result.title,
                                 'description': result.description,
+                                'priority': result.priority,
+                                'due_date': result.due_date.isoformat() if result.due_date else None,
                                 'completed': result.completed,
                                 'updated_at': result.updated_at.isoformat()
                             }
                         })
                     except Exception as e:
-                        logger.error(f"Tool execution failed: {e}", exc_info=True)
+                        logger.error(
+                            f"update_task failed for task_id={tool_params.get('task_id')}: {str(e)}",
+                            extra={
+                                "user_id": user_id,
+                                "task_id": tool_params.get('task_id'),
+                                "error_type": type(e).__name__,
+                                "params": tool_params
+                            },
+                            exc_info=True
+                        )
                         # Continue even if tool fails
 
                 elif tool_name == 'delete_task':
                     # Execute delete_task tool
                     try:
+                        logger.info(
+                            f"Executing delete_task for user {user_id}",
+                            extra={
+                                "user_id": user_id,
+                                "task_id": tool_params.get('task_id')
+                            }
+                        )
+
                         params = DeleteTaskParams(
                             user_id=user_id,
                             task_id=tool_params.get('task_id')
                         )
                         result = delete_task(db, params)
+
+                        logger.info(
+                            f"delete_task succeeded: task_id={result.task_id}, title={result.title}",
+                            extra={
+                                "user_id": user_id,
+                                "task_id": result.task_id,
+                                "task_title": result.title
+                            }
+                        )
+
                         executed_tools.append({
                             'tool': 'delete_task',
                             'params': tool_params,
@@ -477,6 +564,45 @@ async def chat(
                                 'success': result.success
                             }
                         })
+                    except Exception as e:
+                        logger.error(
+                            f"delete_task failed for task_id={tool_params.get('task_id')}: {str(e)}",
+                            extra={
+                                "user_id": user_id,
+                                "task_id": tool_params.get('task_id'),
+                                "error_type": type(e).__name__
+                            },
+                            exc_info=True
+                        )
+                        # Continue even if tool fails
+
+                elif tool_name == 'find_task':
+                    # Execute find_task tool
+                    try:
+                        params = FindTaskParams(
+                            user_id=user_id,
+                            title=tool_params.get('title')
+                        )
+                        result = find_task(db, params)
+
+                        # Return find_task result without auto-execution
+                        # Agent will ask for confirmation before executing delete/update/complete
+                        executed_tools.append({
+                            'tool': 'find_task',
+                            'params': tool_params,
+                            'result': {
+                                'found': result is not None,
+                                'task': {
+                                    'task_id': result.task_id,
+                                    'title': result.title,
+                                    'description': result.description,
+                                    'priority': result.priority,
+                                    'completed': result.completed,
+                                    'created_at': result.created_at.isoformat() if result.created_at else None
+                                } if result else None
+                            }
+                        })
+
                     except Exception as e:
                         logger.error(f"Tool execution failed: {e}", exc_info=True)
                         # Continue even if tool fails
@@ -501,9 +627,31 @@ async def chat(
         conversation_service.update_conversation_timestamp(conversation_id)
 
         # Return response (T068)
+        # Enhance response for list_tasks tool with actual task data
+        final_response = agent_response.response
+        if executed_tools:
+            for tool_call in executed_tools:
+                if tool_call.get('tool') == 'list_tasks' and tool_call.get('result'):
+                    result = tool_call['result']
+                    tasks = result.get('tasks', [])
+                    count = result.get('count', 0)
+
+                    if count == 0:
+                        final_response = "You don't have any tasks yet. Add your first task above!"
+                    else:
+                        # Build task list for response
+                        task_list = []
+                        for task in tasks:
+                            task_status = "✅" if task.get('completed') else "⏳"
+                            priority = task.get('priority', 'medium')
+                            task_list.append(f"{task_status} {task.get('title')} ({priority})")
+
+                        task_display = "\n".join(task_list)
+                        final_response = f"Here are your tasks:\n\n{task_display}"
+
         return ChatResponse(
             conversation_id=conversation_id,
-            response=agent_response.response,
+            response=final_response,
             tool_calls=executed_tools
         )
 

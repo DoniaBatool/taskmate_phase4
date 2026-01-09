@@ -9,7 +9,7 @@ type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 
 export function Button({ variant = 'primary', className, children, ...props }: Props) {
   const styles = clsx(
-    'rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed',
+    'rounded-md px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed min-h-[44px] inline-flex items-center justify-center',
     variant === 'primary' && 'btn-primary',
     variant === 'secondary' && 'btn-secondary',
     variant === 'ghost' && 'btn-ghost',

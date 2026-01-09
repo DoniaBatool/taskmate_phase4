@@ -32,7 +32,7 @@ export function Header() {
   };
 
   // Get user initials for avatar
-  const getInitials = (name?: string, email?: string) => {
+  const getInitials = (name?: string | null, email?: string | null) => {
     if (name) {
       return name
         .split(' ')
@@ -150,7 +150,7 @@ export function Header() {
               >
                 {/* Avatar */}
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-semibold text-white shadow-lg">
-                  {getInitials(user?.name, user?.email)}
+                  {user ? getInitials(user.name, user.email) : 'U'}
                 </div>
                 {/* User info (hidden on mobile) */}
                 <div className="hidden md:block text-left">

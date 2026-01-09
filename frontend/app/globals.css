@@ -196,6 +196,19 @@ html.light .text-sm {
   ring-color: rgba(59, 130, 246, 0.5);
 }
 
+/* Select dropdown options - Dark mode (default) */
+.input-theme option {
+  background-color: #1e293b;
+  color: #f1f5f9;
+  padding: 8px;
+}
+
+/* Select dropdown options - Light mode */
+html.light .input-theme option {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
 /* ============================================
    CHAT SPECIFIC COMPONENTS
    ============================================ */

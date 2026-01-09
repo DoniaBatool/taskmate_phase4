@@ -10,8 +10,11 @@ from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel, Field, validator
 from sqlmodel import Session, select
+import logging
 
 from ..models import Task
+
+logger = logging.getLogger(__name__)
 
 
 class UpdateTaskParams(BaseModel):
@@ -23,6 +26,7 @@ class UpdateTaskParams(BaseModel):
         title: New task title (optional)
         description: New task description (optional)
         priority: New task priority level (optional)
+        due_date: New task due date (optional)
     """
 
     user_id: str = Field(..., description="User ID for task ownership")
@@ -32,6 +36,10 @@ class UpdateTaskParams(BaseModel):
     priority: Optional[str] = Field(
         None,
         description="New task priority level (high, medium, low)"
+    )
+    due_date: Optional[datetime] = Field(
+        None,
+        description="New task due date"
     )
 
     @validator("priority")
@@ -67,6 +75,7 @@ class UpdateTaskResult(BaseModel):
         description: Updated task description
         completed: Task completion status
         priority: Task priority level
+        due_date: Task due date
         updated_at: Timestamp when task was updated
     """
 
@@ -75,6 +84,7 @@ class UpdateTaskResult(BaseModel):
     description: Optional[str] = Field(None, description="Task description")
     completed: bool = Field(..., description="Task completion status")
     priority: str = Field(..., description="Task priority level")
+    due_date: Optional[datetime] = Field(None, description="Task due date")
     updated_at: datetime = Field(..., description="Timestamp of update")
 
     class Config:
@@ -125,8 +135,22 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
         >>> assert result.priority == "high"
     """
     # Validate at least one field provided (T128)
-    if params.title is None and params.description is None and params.priority is None:
-        raise ValueError("At least one field (title, description, or priority) must be provided")
+    if params.title is None and params.description is None and params.priority is None and params.due_date is None:
+        raise ValueError("At least one field (title, description, priority, or due_date) must be provided")
+
+    logger.info(
+        f"update_task: Querying task {params.task_id} for user {params.user_id}",
+        extra={
+            "user_id": params.user_id,
+            "task_id": params.task_id,
+            "fields_to_update": {
+                "title": params.title,
+                "description": params.description,
+                "priority": params.priority,
+                "due_date": params.due_date
+            }
+        }
+    )
 
     # Query task with user_id AND task_id (T129)
     # This enforces user isolation
@@ -138,13 +162,23 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
     try:
         result = db.exec(query).first()
     except Exception as e:
+        logger.error(f"update_task: Query failed: {str(e)}", exc_info=True)
         raise RuntimeError(f"Failed to query task: {str(e)}") from e
 
     # Handle task not found
     if not result:
+        logger.warning(
+            f"update_task: Task {params.task_id} not found for user {params.user_id}",
+            extra={"user_id": params.user_id, "task_id": params.task_id}
+        )
         raise ValueError("Task not found")
 
     task = result
+
+    logger.info(
+        f"update_task: Found task - id={task.id}, title={task.title}",
+        extra={"user_id": params.user_id, "task_id": task.id, "old_title": task.title}
+    )
 
     # Update provided fields (T130)
     if params.title is not None:
@@ -153,6 +187,8 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
         task.description = params.description
     if params.priority is not None:
         task.priority = params.priority
+    if params.due_date is not None:
+        task.due_date = params.due_date
 
     # Always update timestamp (T022)
     task.updated_at = datetime.utcnow()
@@ -162,7 +198,21 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
         db.add(task)
         db.commit()
         db.refresh(task)
+        logger.info(
+            f"update_task: Successfully committed task {task.id} to database",
+            extra={
+                "user_id": params.user_id,
+                "task_id": task.id,
+                "new_title": task.title,
+                "new_priority": task.priority
+            }
+        )
     except Exception as e:
+        logger.error(
+            f"update_task: Commit failed for task {params.task_id}: {str(e)}",
+            extra={"user_id": params.user_id, "task_id": params.task_id},
+            exc_info=True
+        )
         db.rollback()
         raise RuntimeError(f"Failed to update task: {str(e)}") from e
 
@@ -173,5 +223,6 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
         description=task.description,
         completed=task.completed,
         priority=task.priority,
+        due_date=task.due_date,
         updated_at=task.updated_at
     )

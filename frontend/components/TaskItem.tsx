@@ -13,6 +13,36 @@ type Props = {
   onDelete: (task: Task) => void;
 };
 
+function formatDueDate(dueDateStr: string): string {
+  const dueDate = new Date(dueDateStr);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dueDay = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate());
+
+  // Format time
+  const timeStr = dueDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  // Check if today, tomorrow, or specific date
+  if (dueDay.getTime() === today.getTime()) {
+    return `Today at ${timeStr}`;
+  } else if (dueDay.getTime() === tomorrow.getTime()) {
+    return `Tomorrow at ${timeStr}`;
+  } else {
+    const dateStr = dueDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: dueDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+    return `${dateStr} at ${timeStr}`;
+  }
+}
+
 export function TaskItem({ task, onComplete, onEdit, onDelete }: Props) {
   return (
     <div className="task-item flex items-start justify-between gap-3 rounded-md p-4">
@@ -31,10 +61,31 @@ export function TaskItem({ task, onComplete, onEdit, onDelete }: Props) {
         {task.description ? (
           <p className="task-description text-sm">{task.description}</p>
         ) : null}
+        {task.due_date ? (
+          <div className="flex items-center gap-1 text-xs text-theme-secondary">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span>{formatDueDate(task.due_date)}</span>
+          </div>
+        ) : null}
       </div>
       <div className="flex gap-2">
         <Button variant="secondary" onClick={() => onComplete(task)}>
-          {task.completed ? 'Uncomplete' : 'Complete'}
+          {task.completed ? 'Mark Incomplete' : 'Complete'}
         </Button>
         <Button variant="ghost" onClick={() => onEdit(task)}>
           Edit

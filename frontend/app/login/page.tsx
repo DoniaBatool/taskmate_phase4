@@ -38,7 +38,7 @@ export default function LoginPage() {
           <p className="text-sm text-theme-secondary">Log in to continue to your tasks.</p>
         </div>
         {error ? <Alert variant="error">{error}</Alert> : null}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" suppressHydrationWarning>
           <Input
             label="Email"
             type="email"

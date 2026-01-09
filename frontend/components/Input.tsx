@@ -16,22 +16,24 @@ export function Input({ label, error, className, type, ...props }: Props) {
   return (
     <label className="flex flex-col gap-1 text-sm text-theme-secondary">
       <span className="text-theme-primary">{label}</span>
-      <div className="relative">
+      <div className="relative" suppressHydrationWarning>
         <input
           type={inputType}
           className={clsx(
-            'input-theme w-full rounded-md border px-3 py-2 transition-all duration-200',
-            isPassword && 'pr-10',
+            'input-theme w-full rounded-md border px-3 py-2.5 transition-all duration-200 text-base',
+            isPassword && 'pr-12',
             className,
             error && 'border-red-500'
           )}
+          style={{ minHeight: '44px' }}
+          suppressHydrationWarning
           {...props}
         />
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-theme-tertiary hover:text-theme-primary focus:outline-none transition-colors duration-150"
+            className="absolute right-1 top-1/2 -translate-y-1/2 text-theme-tertiary hover:text-theme-primary focus:outline-none transition-colors duration-150 p-2 rounded-md"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? (

@@ -41,6 +41,7 @@
 ### Key Highlights
 
 ✅ **Natural Language Interface** - Manage tasks by chatting with an AI agent
+✅ **Voice-Enabled Chat** 🎤 - Speech-to-Text (STT) and Text-to-Speech (TTS) with OpenAI Whisper
 ✅ **MCP-First Architecture** - Model Context Protocol for AI-app integration
 ✅ **Stateless Design** - Horizontally scalable, cloud-ready architecture
 ✅ **Database-Centric State** - All state persisted in PostgreSQL
@@ -67,6 +68,8 @@
 
 ### Natural Language Commands Supported
 
+**Text or Voice Input** 🎤 - All commands work with both typing and speaking!
+
 | User Says | AI Agent Action |
 |-----------|----------------|
 | "Add a task to buy groceries" | `add_task("Buy groceries")` |
@@ -75,6 +78,11 @@
 | "Mark task 3 as complete" | `complete_task(task_id=3)` |
 | "Delete the meeting task" | `delete_task(...)` |
 | "Change task 1 to 'Call mom tonight'" | `update_task(task_id=1, ...)` |
+
+**Voice Features:**
+- 🎤 **Hold** the microphone button to record (minimum 0.5 seconds)
+- 🔊 **Click** the speaker button on any AI message to hear it
+- 📱 **Touch-optimized** for mobile devices
 
 ---
 
@@ -269,6 +277,23 @@ This project leverages **31 Reusable Intelligence Skills** organized in 6 catego
 - Friendly confirmations
 - Error handling with helpful messages
 
+✅ **Voice-Enabled Chat Interface** 🎤
+- **Speech-to-Text (STT)** - Record voice messages and convert to text
+  - Push-to-talk interface (hold button to record)
+  - Minimum recording duration: 0.5 seconds
+  - OpenAI Whisper API integration
+  - Real-time transcription with visual feedback
+  - Error handling for short/empty recordings
+- **Text-to-Speech (TTS)** - Listen to AI responses
+  - Speaker button on each AI message
+  - Natural voice synthesis with OpenAI TTS API
+  - Playback controls (play/pause)
+  - Audio caching for better performance
+- **Mobile-Optimized** - Touch-friendly voice controls
+  - Responsive design for all screen sizes
+  - Visual recording indicators
+  - Loading states during processing
+
 ✅ **User Authentication**
 - Secure JWT-based authentication
 - User isolation (users only see their tasks)
@@ -278,6 +303,8 @@ This project leverages **31 Reusable Intelligence Skills** organized in 6 catego
 - Persistent conversation state
 - Resume conversations after server restart
 - Message history per conversation
+- Conversation sidebar with search
+- Timestamped messages
 
 ### Technical Features
 
@@ -676,6 +703,42 @@ The AI agent uses **5 MCP tools** to manage tasks:
     }
   ]
 }
+```
+
+### Voice Interface 🎤
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/voice/transcribe` | Convert speech to text (STT) |
+| POST | `/api/voice/synthesize` | Convert text to speech (TTS) |
+
+**Transcribe Request (multipart/form-data):**
+```
+audio: <audio-file>  // WebM, MP3, WAV format
+```
+
+**Transcribe Response:**
+```json
+{
+  "text": "Add a task to buy groceries",
+  "language": "en",
+  "duration": 2.5
+}
+```
+
+**Synthesize Request:**
+```json
+{
+  "text": "I've added 'Buy groceries' to your tasks.",
+  "voice": "alloy",  // Optional: alloy, echo, fable, onyx, nova, shimmer
+  "speed": 1.0       // Optional: 0.25 to 4.0
+}
+```
+
+**Synthesize Response:**
+```
+Content-Type: audio/mpeg
+<audio-data>
 ```
 
 ---

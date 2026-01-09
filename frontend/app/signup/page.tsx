@@ -47,7 +47,7 @@ export default function SignupPage() {
         </div>
         {error ? <Alert variant="error">{error}</Alert> : null}
         {success ? <Alert variant="success">{success}</Alert> : null}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" suppressHydrationWarning>
           <Input
             label="Email"
             type="email"

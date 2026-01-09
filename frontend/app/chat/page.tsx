@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Header } from '@/components/Header';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
+import { ConversationSidebar } from '@/components/ConversationSidebar';
+import { VoiceRecorder } from '@/components/VoiceRecorder';
+import { TextToSpeech } from '@/components/TextToSpeech';
 import { apiFetch, AuthError } from '@/lib/api';
 import { getToken, getUserIdFromToken } from '@/lib/auth';
 
@@ -67,6 +70,38 @@ export default function ChatPage() {
       // Start fresh if unable to load
       setConversationId(null);
       setMessages([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }
+
+  async function loadConversation(conversationIdToLoad: number) {
+    setLoadingHistory(true);
+    try {
+      // Fetch specific conversation messages from database
+      const conversation = await apiFetch<{
+        conversation_id: number;
+        messages: Array<{ role: string; content: string; created_at: string }>;
+      }>(`/api/conversations/${conversationIdToLoad}/messages`);
+
+      setConversationId(conversation.conversation_id);
+
+      if (conversation.messages && conversation.messages.length > 0) {
+        const loadedMessages: Message[] = conversation.messages.map(msg => ({
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          timestamp: new Date(msg.created_at),
+        }));
+        setMessages(loadedMessages);
+      } else {
+        setMessages([]);
+      }
+    } catch (err: any) {
+      if (err instanceof AuthError) {
+        router.replace('/login');
+        return;
+      }
+      console.error('Failed to load conversation:', err);
     } finally {
       setLoadingHistory(false);
     }
@@ -145,22 +180,35 @@ export default function ChatPage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen px-4 py-8">
-        <div className="mx-auto flex max-w-4xl flex-col gap-4 h-[calc(100vh-12rem)]">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-theme-primary">AI Chat Assistant</h1>
-              <p className="text-sm text-theme-secondary">
-                Chat naturally to manage your tasks with AI
-              </p>
+      <div className="flex min-h-screen">
+        {/* Conversation History Sidebar */}
+        <ConversationSidebar
+          currentConversationId={conversationId}
+          onSelectConversation={loadConversation}
+          onNewChat={startNewConversation}
+        />
+
+        {/* Main Chat Area */}
+        <div className="flex-1 px-2 sm:px-4 py-4 sm:py-8 lg:pl-0">
+          <div className="mx-auto flex max-w-4xl flex-col gap-3 sm:gap-4 h-[calc(100vh-8rem)] sm:h-[calc(100vh-12rem)]">
+            {/* Header */}
+            <div className="flex items-center justify-between flex-wrap gap-2 px-2 sm:px-0">
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-theme-primary">AI Chat Assistant</h1>
+                <p className="text-xs sm:text-sm text-theme-secondary">
+                  Chat naturally to manage your tasks with AI
+                </p>
+              </div>
+              {messages.length > 0 && (
+                <Button
+                  onClick={startNewConversation}
+                  variant="secondary"
+                  className="h-10 sm:h-auto min-w-[88px]"
+                >
+                  New Chat
+                </Button>
+              )}
             </div>
-            {messages.length > 0 && (
-              <Button onClick={startNewConversation} variant="secondary">
-                New Chat
-              </Button>
-            )}
-          </div>
 
           {/* Chat Messages - iMessage Style */}
           <div className="flex-1 overflow-hidden rounded-2xl chat-background shadow-inner">
@@ -192,7 +240,7 @@ export default function ChatPage() {
                   <p className="text-theme-secondary max-w-md mb-6">
                     Your intelligent task assistant is ready to help
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg px-4 sm:px-0">
                     {[
                       { icon: '➕', text: 'Add task to buy groceries', color: 'from-blue-500 to-blue-600' },
                       { icon: '📋', text: 'Show my tasks', color: 'from-purple-500 to-purple-600' },
@@ -202,7 +250,7 @@ export default function ChatPage() {
                       <button
                         key={i}
                         onClick={() => setInput(suggestion.text)}
-                        className={`bg-gradient-to-r ${suggestion.color} text-white px-4 py-2 rounded-xl text-sm font-medium hover:shadow-lg transform hover:scale-105 transition-all duration-200`}
+                        className={`bg-gradient-to-r ${suggestion.color} text-white px-4 py-3 rounded-xl text-sm font-medium hover:shadow-lg transform hover:scale-105 active:scale-95 transition-all duration-200 min-h-[44px] text-left`}
                       >
                         <span className="mr-2">{suggestion.icon}</span>
                         {suggestion.text}
@@ -240,17 +288,25 @@ export default function ChatPage() {
                       )}
 
                       {/* Message Bubble */}
-                      <div className="flex flex-col max-w-[75%]">
+                      <div className="flex flex-col max-w-[85%] sm:max-w-[75%]">
                         <div
-                          className={`rounded-2xl px-4 py-2.5 shadow-sm ${
+                          className={`rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 shadow-sm ${
                             message.role === 'user'
                               ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-br-sm'
                               : 'message-bubble-assistant rounded-bl-sm'
                           }`}
                         >
-                          <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
-                            {message.content}
-                          </p>
+                          <div className="flex items-start gap-2">
+                            <p className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words flex-1">
+                              {message.content}
+                            </p>
+                            {/* TTS Button for assistant messages */}
+                            {message.role === 'assistant' && (
+                              <div className="flex-shrink-0 mt-0.5">
+                                <TextToSpeech text={message.content} />
+                              </div>
+                            )}
+                          </div>
                         </div>
                         {message.timestamp && (
                           <p
@@ -306,21 +362,23 @@ export default function ChatPage() {
           </div>
 
           {/* Input Form - iOS Style */}
-          <form onSubmit={sendMessage} className="flex gap-3 items-end">
+          <form onSubmit={sendMessage} className="flex gap-2 sm:gap-3 items-end px-2 sm:px-0">
             <div className="flex-1 relative">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="iMessage"
-                className="chat-input w-full rounded-3xl px-5 py-3 pr-12 text-[15px] focus:outline-none transition-colors shadow-sm"
+                placeholder="Type or speak your message..."
+                className="chat-input w-full rounded-3xl px-4 sm:px-5 py-2.5 sm:py-3 pr-10 sm:pr-12 text-sm sm:text-[15px] focus:outline-none transition-colors shadow-sm"
                 disabled={loading}
+                style={{ minHeight: '44px' }}
               />
               {input.trim() && !loading && (
                 <button
                   type="button"
                   onClick={() => setInput('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-2"
+                  aria-label="Clear input"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -328,7 +386,7 @@ export default function ChatPage() {
                     viewBox="0 0 24 24"
                     strokeWidth={2}
                     stroke="currentColor"
-                    className="w-5 h-5"
+                    className="w-4 h-4 sm:w-5 sm:h-5"
                   >
                     <path
                       strokeLinecap="round"
@@ -339,14 +397,23 @@ export default function ChatPage() {
                 </button>
               )}
             </div>
+
+            {/* Voice Recorder Button */}
+            <VoiceRecorder
+              onTranscription={(text) => setInput(text)}
+              disabled={loading}
+            />
+
+            {/* Send Button */}
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
+              className={`flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-lg ${
                 input.trim() && !loading
-                  ? 'bg-gradient-to-br from-blue-500 to-purple-600 hover:shadow-xl hover:scale-105'
+                  ? 'bg-gradient-to-br from-blue-500 to-purple-600 hover:shadow-xl hover:scale-105 active:scale-95'
                   : 'bg-slate-300 dark:bg-slate-600 cursor-not-allowed'
               }`}
+              aria-label="Send message"
             >
               {loading ? (
                 <svg
@@ -381,6 +448,7 @@ export default function ChatPage() {
               )}
             </button>
           </form>
+          </div>
         </div>
       </div>
     </>

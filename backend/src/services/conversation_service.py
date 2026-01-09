@@ -188,3 +188,103 @@ class ConversationService:
             conversation.updated_at = datetime.utcnow()
             self.db.add(conversation)
             self.db.commit()
+
+    @log_execution_time("get_user_conversations")
+    def get_user_conversations(self, user_id: str) -> List[dict]:
+        """Get all conversations for a user with message count.
+
+        Args:
+            user_id: ID of the authenticated user
+
+        Returns:
+            List of conversation dictionaries with metadata and message count
+
+        Example:
+            >>> conversations = service.get_user_conversations("user-123")
+            >>> for conv in conversations:
+            ...     print(f"{conv['title']} - {conv['message_count']} messages")
+        """
+        from sqlalchemy import func
+
+        # Get conversations with message count
+        statement = (
+            select(
+                Conversation.id,
+                Conversation.user_id,
+                Conversation.created_at,
+                Conversation.updated_at,
+                func.count(Message.id).label('message_count')
+            )
+            .outerjoin(Message, Message.conversation_id == Conversation.id)
+            .where(Conversation.user_id == user_id)
+            .group_by(Conversation.id)
+            .order_by(Conversation.updated_at.desc())
+        )
+
+        results = self.db.exec(statement).all()
+
+        conversations = []
+        for row in results:
+            # Get first user message as title
+            first_message_statement = (
+                select(Message.content)
+                .where(
+                    Message.conversation_id == row.id,
+                    Message.role == 'user'
+                )
+                .order_by(Message.created_at.asc())
+                .limit(1)
+            )
+            first_message = self.db.exec(first_message_statement).first()
+            title = first_message[:50] if first_message else "New Chat"
+
+            conversations.append({
+                'id': row.id,
+                'title': title,
+                'created_at': row.created_at.isoformat(),
+                'updated_at': row.updated_at.isoformat(),
+                'message_count': row.message_count or 0
+            })
+
+        return conversations
+
+    @log_execution_time("get_latest_conversation")
+    def get_latest_conversation(self, user_id: str) -> dict:
+        """Get user's most recent conversation with messages.
+
+        Args:
+            user_id: ID of the authenticated user
+
+        Returns:
+            Dictionary with conversation_id and messages list
+
+        Example:
+            >>> latest = service.get_latest_conversation("user-123")
+            >>> print(f"Conversation {latest['conversation_id']}")
+        """
+        # Get latest conversation
+        statement = (
+            select(Conversation)
+            .where(Conversation.user_id == user_id)
+            .order_by(Conversation.updated_at.desc())
+            .limit(1)
+        )
+        conversation = self.db.exec(statement).first()
+
+        if not conversation:
+            return {'conversation_id': None, 'messages': []}
+
+        # Get messages for this conversation
+        messages = self.get_conversation_history(conversation.id, user_id)
+
+        return {
+            'conversation_id': conversation.id,
+            'messages': [
+                {
+                    'role': msg.role,
+                    'content': msg.content,
+                    'created_at': msg.created_at.isoformat()
+                }
+                for msg in messages
+            ]
+        }
