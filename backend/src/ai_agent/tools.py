@@ -209,7 +209,16 @@ def get_tool_definitions() -> List[Dict[str, Any]]:
                             "type": "string",
                             "description": (
                                 "New task due date and time in ISO 8601 format (optional). "
-                                "Provide if user wants to change or set deadline."
+                                "Provide if user wants to change or set deadline. "
+                                "Use null to remove deadline completely."
+                            )
+                        },
+                        "completed": {
+                            "type": "boolean",
+                            "description": (
+                                "Mark task as complete (true) or incomplete (false). "
+                                "Use this to toggle completion status. "
+                                "Examples: 'mark as incomplete' → false, 'mark as done' → true"
                             )
                         }
                     },

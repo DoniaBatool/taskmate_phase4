@@ -490,7 +490,8 @@ async def chat(
                             title=tool_params.get('title'),
                             description=tool_params.get('description'),
                             priority=tool_params.get('priority'),
-                            due_date=due_date
+                            due_date=due_date,
+                            completed=tool_params.get('completed')
                         )
                         result = update_task(db, params)
 

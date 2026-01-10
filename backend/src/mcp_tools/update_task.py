@@ -27,6 +27,7 @@ class UpdateTaskParams(BaseModel):
         description: New task description (optional)
         priority: New task priority level (optional)
         due_date: New task due date (optional)
+        completed: Mark as completed (True) or incomplete (False) (optional)
     """
 
     user_id: str = Field(..., description="User ID for task ownership")
@@ -40,6 +41,10 @@ class UpdateTaskParams(BaseModel):
     due_date: Optional[datetime] = Field(
         None,
         description="New task due date"
+    )
+    completed: Optional[bool] = Field(
+        None,
+        description="Mark task as completed (True) or incomplete (False)"
     )
 
     @validator("priority")
@@ -135,8 +140,10 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
         >>> assert result.priority == "high"
     """
     # Validate at least one field provided (T128)
-    if params.title is None and params.description is None and params.priority is None and params.due_date is None:
-        raise ValueError("At least one field (title, description, priority, or due_date) must be provided")
+    if (params.title is None and params.description is None and
+        params.priority is None and params.due_date is None and
+        params.completed is None):
+        raise ValueError("At least one field (title, description, priority, due_date, or completed) must be provided")
 
     logger.info(
         f"update_task: Querying task {params.task_id} for user {params.user_id}",
@@ -147,7 +154,8 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
                 "title": params.title,
                 "description": params.description,
                 "priority": params.priority,
-                "due_date": params.due_date
+                "due_date": params.due_date,
+                "completed": params.completed
             }
         }
     )
@@ -189,6 +197,8 @@ def update_task(db: Session, params: UpdateTaskParams) -> UpdateTaskResult:
         task.priority = params.priority
     if params.due_date is not None:
         task.due_date = params.due_date
+    if params.completed is not None:
+        task.completed = params.completed
 
     # Always update timestamp (T022)
     task.updated_at = datetime.utcnow()
