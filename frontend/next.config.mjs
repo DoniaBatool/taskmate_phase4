@@ -10,13 +10,13 @@ const nextConfig = {
   experimental: {
     typedRoutes: true
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve(__dirname, './'),
-      '@/components': path.resolve(__dirname, './components'),
-      '@/lib': path.resolve(__dirname, './lib'),
-      '@/styles': path.resolve(__dirname, './styles'),
+      '@': path.resolve(__dirname),
+      '@/lib': path.resolve(__dirname, 'lib'),
+      '@/components': path.resolve(__dirname, 'components'),
+      '@/styles': path.resolve(__dirname, 'styles'),
     };
     return config;
   },
