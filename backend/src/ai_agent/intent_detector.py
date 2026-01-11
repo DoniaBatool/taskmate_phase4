@@ -24,18 +24,21 @@ class Intent:
         task_id: Optional[int] = None,
         task_title: Optional[str] = None,
         params: Optional[Dict[str, Any]] = None,
-        confidence: float = 1.0
+        confidence: float = 1.0,
+        needs_confirmation: bool = False
     ):
         self.operation = operation  # "update", "delete", "complete", etc.
         self.task_id = task_id
         self.task_title = task_title
         self.params = params or {}
         self.confidence = confidence
+        self.needs_confirmation = needs_confirmation  # If True, ask user first
 
     def __repr__(self):
         return (
             f"Intent(operation={self.operation}, task_id={self.task_id}, "
-            f"task_title={self.task_title}, params={self.params})"
+            f"task_title={self.task_title}, params={self.params}, "
+            f"needs_confirmation={self.needs_confirmation})"
         )
 
 
@@ -84,6 +87,10 @@ class IntentDetector:
         'next week', 'next month'
     ]
 
+    # Confirmation keywords
+    CONFIRM_YES = ['yes', 'yeah', 'yep', 'sure', 'ok', 'okay', 'haan', 'han', 'theek', 'bilkul']
+    CONFIRM_NO = ['no', 'nah', 'nope', 'cancel', 'nahi', 'na', 'mat']
+
 
     def detect_intent(
         self,
@@ -99,19 +106,124 @@ class IntentDetector:
         Returns:
             Intent object if detected, None otherwise
         """
-        message_lower = message.lower()
+        message_lower = message.lower().strip()
 
-        # Check for UPDATE intent
+        # STEP 1: Check if user is responding to a confirmation question
+        pending_confirmation = self._check_pending_confirmation(conversation_history)
+        if pending_confirmation:
+            # User is responding yes/no to a previous confirmation question
+            is_yes = self._is_confirmation_response(message_lower, confirm=True)
+            is_no = self._is_confirmation_response(message_lower, confirm=False)
+
+            if is_yes:
+                # User confirmed - return intent with needs_confirmation=False
+                return Intent(
+                    operation=pending_confirmation['operation'],
+                    task_id=pending_confirmation.get('task_id'),
+                    task_title=pending_confirmation.get('task_title'),
+                    params=pending_confirmation.get('params'),
+                    needs_confirmation=False  # Confirmed! Execute now
+                )
+            elif is_no:
+                # User cancelled - return None (don't execute)
+                logger.info(f"User cancelled operation: {pending_confirmation['operation']}")
+                return None
+
+        # STEP 2: Check for UPDATE intent
         if self._matches_any_pattern(message, self.UPDATE_PATTERNS):
             return self._detect_update_intent(message, message_lower, conversation_history)
 
-        # Check for DELETE intent
+        # STEP 3: Check for DELETE intent
         if self._matches_any_pattern(message, self.DELETE_PATTERNS):
             return self._detect_delete_intent(message, message_lower, conversation_history)
 
-        # Check for COMPLETE intent
+        # STEP 4: Check for COMPLETE intent
         if self._matches_any_pattern(message, self.COMPLETE_PATTERNS):
             return self._detect_complete_intent(message, message_lower, conversation_history)
+
+        return None
+
+
+    def _is_confirmation_response(self, message_lower: str, confirm: bool) -> bool:
+        """Check if message is a confirmation (yes) or cancellation (no).
+
+        Args:
+            message_lower: Lowercase message
+            confirm: True to check for "yes", False to check for "no"
+
+        Returns:
+            True if message matches confirmation/cancellation keywords
+        """
+        keywords = self.CONFIRM_YES if confirm else self.CONFIRM_NO
+        # Check if message is ONLY a confirmation word (or very short with confirmation)
+        words = message_lower.split()
+        if len(words) <= 3:  # Short message like "yes", "yes please", "haan kar do"
+            return any(keyword in message_lower for keyword in keywords)
+        return False
+
+
+    def _check_pending_confirmation(
+        self,
+        conversation_history: List[Dict[str, str]]
+    ) -> Optional[Dict[str, Any]]:
+        """Check if last assistant message was asking for confirmation.
+
+        Looks for patterns like:
+        - "Are you sure?"
+        - "Kya aap sure hain?"
+        - "Should I delete task X?"
+        - "Delete this task?"
+
+        Returns:
+            Dict with operation details if pending confirmation, None otherwise
+        """
+        if not conversation_history:
+            return None
+
+        # Check last assistant message
+        for msg in reversed(conversation_history[-4:]):
+            if msg.get('role') == 'assistant':
+                content = msg.get('content', '').lower()
+
+                # Look for confirmation question patterns
+                confirmation_patterns = [
+                    r'sure|confirm|certain',
+                    r'kya.*sure|pakka',
+                    r'should i|shall i',
+                    r'delete.*\?',
+                    r'update.*\?',
+                    r'complete.*\?',
+                    r'mark.*\?'
+                ]
+
+                is_asking_confirmation = any(
+                    re.search(pattern, content, re.IGNORECASE)
+                    for pattern in confirmation_patterns
+                )
+
+                if is_asking_confirmation:
+                    # Extract task ID if mentioned
+                    task_id_match = re.search(r'task\s+#?(\d+)', content)
+                    task_id = int(task_id_match.group(1)) if task_id_match else None
+
+                    # Determine operation type
+                    operation = None
+                    if 'delete' in content or 'remove' in content:
+                        operation = 'delete'
+                    elif 'update' in content or 'change' in content or 'edit' in content:
+                        operation = 'update'
+                    elif 'complete' in content or 'mark' in content or 'done' in content:
+                        operation = 'complete'
+
+                    if operation:
+                        return {
+                            'operation': operation,
+                            'task_id': task_id,
+                            'task_title': None,
+                            'params': {}
+                        }
+
+                break  # Only check most recent assistant message
 
         return None
 
@@ -275,11 +387,16 @@ class IntentDetector:
             f"params={params}"
         )
 
+        # If user provided update details, execute immediately (no confirmation)
+        # Otherwise, ask clarifying questions first
+        needs_confirmation = not bool(params)
+
         return Intent(
             operation="update",
             task_id=task_id,
             task_title=task_title,
-            params=params if params else None
+            params=params if params else None,
+            needs_confirmation=needs_confirmation
         )
 
 
@@ -308,7 +425,8 @@ class IntentDetector:
         return Intent(
             operation="delete",
             task_id=task_id,
-            task_title=task_title
+            task_title=task_title,
+            needs_confirmation=True  # Always ask before deleting
         )
 
 
@@ -337,7 +455,8 @@ class IntentDetector:
         return Intent(
             operation="complete",
             task_id=task_id,
-            task_title=task_title
+            task_title=task_title,
+            needs_confirmation=True  # Always ask before marking complete
         )
 
 

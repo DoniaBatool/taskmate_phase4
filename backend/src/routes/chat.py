@@ -361,8 +361,26 @@ async def chat(
                 extra={"user_id": user_id, "intent": str(detected_intent)}
             )
 
-            # Handle UPDATE intent
-            if detected_intent.operation == "update" and detected_intent.params:
+            # Check if confirmation is needed
+            # If needs_confirmation=True, let AI ask for confirmation
+            # If needs_confirmation=False, execute tool immediately
+            if detected_intent.needs_confirmation:
+                logger.info(
+                    f"Intent needs confirmation - letting AI ask user",
+                    extra={"user_id": user_id, "operation": detected_intent.operation}
+                )
+                # Don't add to forced_tool_calls
+                # AI will ask confirmation question
+                # Next turn, user responds "yes" → intent detector returns needs_confirmation=False
+            else:
+                # User confirmed OR provided all details - FORCE execution
+                logger.info(
+                    f"Intent confirmed - forcing tool execution",
+                    extra={"user_id": user_id, "operation": detected_intent.operation}
+                )
+
+            # Handle UPDATE intent (with full params or after confirmation)
+            if detected_intent.operation == "update" and detected_intent.params and not detected_intent.needs_confirmation:
                 # User provided update details - FORCE execution
                 task_id = detected_intent.task_id
 
@@ -404,8 +422,8 @@ async def chat(
                         extra={"user_id": user_id, "task_id": task_id}
                     )
 
-            # Handle DELETE intent
-            elif detected_intent.operation == "delete":
+            # Handle DELETE intent (after confirmation)
+            elif detected_intent.operation == "delete" and not detected_intent.needs_confirmation:
                 task_id = detected_intent.task_id
 
                 # If task_title provided, find it first
@@ -433,8 +451,8 @@ async def chat(
                         extra={"user_id": user_id, "task_id": task_id}
                     )
 
-            # Handle COMPLETE intent
-            elif detected_intent.operation == "complete":
+            # Handle COMPLETE intent (after confirmation)
+            elif detected_intent.operation == "complete" and not detected_intent.needs_confirmation:
                 task_id = detected_intent.task_id
 
                 # If task_title provided, find it first
