@@ -14,6 +14,8 @@ from ..db import get_session
 from ..services.conversation_service import ConversationService
 from ..ai_agent.runner import run_agent, AgentResponse
 from ..ai_agent.tools import register_tools
+from ..ai_agent.intent_detector import detect_user_intent
+from ..ai_agent.utils import parse_natural_date
 from ..mcp_tools.add_task import add_task, AddTaskParams
 from ..mcp_tools.list_tasks import list_tasks, ListTasksParams
 from ..mcp_tools.complete_task import complete_task, CompleteTaskParams
@@ -343,10 +345,128 @@ async def chat(
             for msg in history_messages
         ]
 
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # INTENT DETECTION MIDDLEWARE - FORCED TOOL EXECUTION
+        # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        # Detect user intent BEFORE calling AI agent
+        # If intent detected with params, FORCE tool execution
+        # This bypasses unreliable AI system prompt interpretation
+
+        detected_intent = detect_user_intent(request.message, conversation_history)
+        forced_tool_calls = []
+
+        if detected_intent:
+            logger.info(
+                f"Intent detected: {detected_intent}",
+                extra={"user_id": user_id, "intent": str(detected_intent)}
+            )
+
+            # Handle UPDATE intent
+            if detected_intent.operation == "update" and detected_intent.params:
+                # User provided update details - FORCE execution
+                task_id = detected_intent.task_id
+
+                # If task_title provided instead of ID, find it first
+                if not task_id and detected_intent.task_title:
+                    try:
+                        find_params = FindTaskParams(
+                            user_id=user_id,
+                            title=detected_intent.task_title
+                        )
+                        find_result = find_task(db, find_params)
+                        if find_result:
+                            task_id = find_result.task_id
+                    except Exception as e:
+                        logger.error(f"Failed to find task: {e}")
+
+                if task_id:
+                    # Parse due_date if provided
+                    due_date = None
+                    if 'due_date' in detected_intent.params:
+                        due_date_str = detected_intent.params.get('due_date')
+                        if due_date_str:
+                            due_date = parse_natural_date(due_date_str)
+
+                    # FORCE update_task execution
+                    forced_tool_calls.append({
+                        'tool': 'update_task',
+                        'params': {
+                            'task_id': task_id,
+                            'title': detected_intent.params.get('title'),
+                            'description': detected_intent.params.get('description'),
+                            'priority': detected_intent.params.get('priority'),
+                            'due_date': due_date.isoformat() if due_date else None,
+                        }
+                    })
+
+                    logger.info(
+                        f"FORCED UPDATE: task_id={task_id}, params={detected_intent.params}",
+                        extra={"user_id": user_id, "task_id": task_id}
+                    )
+
+            # Handle DELETE intent
+            elif detected_intent.operation == "delete":
+                task_id = detected_intent.task_id
+
+                # If task_title provided, find it first
+                if not task_id and detected_intent.task_title:
+                    try:
+                        find_params = FindTaskParams(
+                            user_id=user_id,
+                            title=detected_intent.task_title
+                        )
+                        find_result = find_task(db, find_params)
+                        if find_result:
+                            task_id = find_result.task_id
+                    except Exception as e:
+                        logger.error(f"Failed to find task: {e}")
+
+                if task_id:
+                    # FORCE delete_task execution
+                    forced_tool_calls.append({
+                        'tool': 'delete_task',
+                        'params': {'task_id': task_id}
+                    })
+
+                    logger.info(
+                        f"FORCED DELETE: task_id={task_id}",
+                        extra={"user_id": user_id, "task_id": task_id}
+                    )
+
+            # Handle COMPLETE intent
+            elif detected_intent.operation == "complete":
+                task_id = detected_intent.task_id
+
+                # If task_title provided, find it first
+                if not task_id and detected_intent.task_title:
+                    try:
+                        find_params = FindTaskParams(
+                            user_id=user_id,
+                            title=detected_intent.task_title
+                        )
+                        find_result = find_task(db, find_params)
+                        if find_result:
+                            task_id = find_result.task_id
+                    except Exception as e:
+                        logger.error(f"Failed to find task: {e}")
+
+                if task_id:
+                    # FORCE complete_task execution
+                    forced_tool_calls.append({
+                        'tool': 'complete_task',
+                        'params': {'task_id': task_id}
+                    })
+
+                    logger.info(
+                        f"FORCED COMPLETE: task_id={task_id}",
+                        extra={"user_id": user_id, "task_id": task_id}
+                    )
+
         # Initialize agent tools (T064)
         tools = register_tools()
 
         # Run AI agent (T065)
+        # If forced tool calls exist, we still call AI for conversational response
         agent_response = await run_agent(
             user_id=user_id,
             message=request.message,
@@ -355,11 +475,15 @@ async def chat(
         )
 
         # Execute tool calls if any
+        # PRIORITY: Forced tool calls execute FIRST, then AI-suggested tools
         executed_tools = []
         seen_tool_calls = set()  # Track tool call signatures for deduplication
 
-        if hasattr(agent_response, 'tool_calls') and agent_response.tool_calls:
-            for tool_call in agent_response.tool_calls:
+        # STEP 1: Execute FORCED tool calls (from intent detector)
+        all_tool_calls = forced_tool_calls + (agent_response.tool_calls if hasattr(agent_response, 'tool_calls') and agent_response.tool_calls else [])
+
+        if all_tool_calls:
+            for tool_call in all_tool_calls:
                 tool_name = tool_call.get('tool')
                 tool_params = tool_call.get('params', {})
 

@@ -50,7 +50,7 @@ export default function TasksPage() {
     }
   }
 
-  async function handleCreate(payload: { title: string; description?: string; priority?: string }) {
+  async function handleCreate(payload: { title: string; description?: string; priority?: string; due_date?: string }) {
     setActioning(true);
     setError(null);
     try {
@@ -71,7 +71,7 @@ export default function TasksPage() {
     }
   }
 
-  async function handleUpdate(payload: { title: string; description?: string; priority?: string }) {
+  async function handleUpdate(payload: { title: string; description?: string; priority?: string; due_date?: string }) {
     if (!editing) return;
     setActioning(true);
     setError(null);
