@@ -362,16 +362,66 @@ async def chat(
             )
 
             # Check if confirmation is needed
-            # If needs_confirmation=True, let AI ask for confirmation
+            # If needs_confirmation=True, BYPASS AI and ask confirmation ourselves
             # If needs_confirmation=False, execute tool immediately
             if detected_intent.needs_confirmation:
                 logger.info(
-                    f"Intent needs confirmation - letting AI ask user",
+                    f"Intent needs confirmation - generating confirmation question",
                     extra={"user_id": user_id, "operation": detected_intent.operation}
                 )
-                # Don't add to forced_tool_calls
-                # AI will ask confirmation question
-                # Next turn, user responds "yes" → intent detector returns needs_confirmation=False
+
+                # BYPASS AI AGENT - Generate confirmation question ourselves
+                # First, get task details if we have task_id
+                task_details = ""
+                if detected_intent.task_id:
+                    try:
+                        # Get task details to show in confirmation
+                        list_result = list_tasks(db, ListTasksParams(user_id=user_id, status="all"))
+                        for task in list_result.tasks:
+                            if task['task_id'] == detected_intent.task_id:
+                                title = task['title']
+                                priority = task.get('priority', 'medium')
+                                task_details = f" '{title}' ({priority} priority)"
+                                break
+                    except:
+                        pass
+
+                # Generate confirmation message based on operation
+                if detected_intent.operation == "delete":
+                    confirmation_msg = f"🗑️ Kya aap sure hain k task{task_details} delete karna hai? (Are you sure you want to delete this task?)\n\nReply 'yes' to confirm or 'no' to cancel."
+                elif detected_intent.operation == "complete":
+                    confirmation_msg = f"✅ Task{task_details} ko complete mark kar doon? (Mark this task as complete?)\n\nReply 'yes' to confirm or 'no' to cancel."
+                elif detected_intent.operation == "incomplete":
+                    confirmation_msg = f"⏳ Task{task_details} ko incomplete mark kar doon? (Mark this task as incomplete?)\n\nReply 'yes' to confirm or 'no' to cancel."
+                elif detected_intent.operation == "update":
+                    confirmation_msg = f"📝 Task{task_details} update kar doon? (Update this task?)\n\nReply 'yes' to confirm or 'no' to cancel."
+                elif detected_intent.operation == "update_ask":
+                    # User wants to update but didn't provide details - ask what to update
+                    confirmation_msg = f"📝 Task{task_details} mein kya update karna hai? (What do you want to update?)\n\nYou can update:\n• Title\n• Priority (high/medium/low)\n• Deadline/due date\n• Description\n\nTell me what you want to change!"
+                else:
+                    confirmation_msg = "Kya aap sure hain? (Are you sure?)\n\nReply 'yes' to confirm or 'no' to cancel."
+
+                # Store messages in database
+                conversation_service.add_message(
+                    conversation_id=conversation_id,
+                    user_id=user_id,
+                    role="user",
+                    content=request.message
+                )
+                conversation_service.add_message(
+                    conversation_id=conversation_id,
+                    user_id=user_id,
+                    role="assistant",
+                    content=confirmation_msg
+                )
+                conversation_service.update_conversation_timestamp(conversation_id)
+
+                # Return confirmation question immediately WITHOUT calling AI
+                return ChatResponse(
+                    conversation_id=conversation_id,
+                    response=confirmation_msg,
+                    tool_calls=[]
+                )
             else:
                 # User confirmed OR provided all details - FORCE execution
                 logger.info(
