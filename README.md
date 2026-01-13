@@ -95,7 +95,7 @@
 | **Next.js** | 14+ | React framework with App Router |
 | **TypeScript** | 5.x | Type safety |
 | **Tailwind CSS** | 3.x | Styling |
-| **OpenAI ChatKit** | Latest | Chatbot UI framework |
+| **Custom Chat UI** | - | Real-time chat interface |
 | **shadcn/ui** | Latest | Component library |
 
 ### Backend
@@ -136,7 +136,7 @@
 ┌─────────────────┐     ┌──────────────────────────────────────────────┐     ┌─────────────────┐
 │                 │     │              FastAPI Server                   │     │                 │
 │                 │     │  ┌────────────────────────────────────────┐  │     │                 │
-│  ChatKit UI     │────▶│  │         Chat Endpoint                  │  │     │    Neon DB      │
+│  Custom Chat UI │────▶│  │         Chat Endpoint                  │  │     │    Neon DB      │
 │  (Frontend)     │     │  │  POST /api/{user_id}/chat              │  │     │  (PostgreSQL)   │
 │                 │     │  └───────────────┬────────────────────────┘  │     │                 │
 │                 │     │                  │                           │     │  - tasks        │
@@ -504,7 +504,6 @@ npm install
 cp .env.example .env.local
 # Edit .env.local with your values:
 # - NEXT_PUBLIC_API_URL=http://localhost:8000
-# - NEXT_PUBLIC_OPENAI_DOMAIN_KEY (for ChatKit)
 # - BETTER_AUTH_SECRET
 
 # Start development server
@@ -535,8 +534,7 @@ MCP_SERVER_URL=http://localhost:8000
 # API
 NEXT_PUBLIC_API_URL=http://localhost:8000
 
-# OpenAI ChatKit
-NEXT_PUBLIC_OPENAI_DOMAIN_KEY=your-domain-key
+# Custom Chat UI (no additional config needed)
 
 # Authentication
 BETTER_AUTH_SECRET=your-secret-key-here  # Same as backend
@@ -1023,7 +1021,7 @@ This project is part of **Panaversity Hackathon II**.
 - **PIAIC & GIAIC** - Educational support
 - **Claude Code** - AI-powered development
 - **SpecKit Plus** - Specification framework
-- **OpenAI** - Agents SDK and ChatKit
+- **OpenAI** - Agents SDK for AI chat capabilities
 
 ---
 
