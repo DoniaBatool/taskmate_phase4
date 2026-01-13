@@ -61,29 +61,44 @@ async def chatkit_adapter(
         )
         
         # Extract message from ChatKit payload
-        # ChatKit format varies, but typically has messages array or text field
+        # ChatKit sends requests in SSE format or JSON with messages array
         message_text = None
         conversation_id = None
+        thread_id = None
         
         if isinstance(payload, dict):
-            # Try different ChatKit payload formats
+            # ChatKit typically sends messages array with role and content
             if "messages" in payload and isinstance(payload["messages"], list):
-                # ChatKit messages array format
-                for msg in payload["messages"]:
+                # ChatKit messages array format - get the last user message
+                for msg in reversed(payload["messages"]):
                     if isinstance(msg, dict) and msg.get("role") == "user":
-                        message_text = msg.get("content") or msg.get("text")
+                        # Content can be string or array of content items
+                        content = msg.get("content")
+                        if isinstance(content, str):
+                            message_text = content
+                        elif isinstance(content, list) and len(content) > 0:
+                            # Get text from first content item
+                            first_item = content[0]
+                            if isinstance(first_item, dict):
+                                message_text = first_item.get("text") or first_item.get("content")
+                            elif isinstance(first_item, str):
+                                message_text = first_item
                         break
-            elif "text" in payload:
-                message_text = payload["text"]
-            elif "message" in payload:
-                message_text = payload["message"]
-            elif "content" in payload:
-                message_text = payload["content"]
+            
+            # Also check for direct text/message fields
+            if not message_text:
+                if "text" in payload:
+                    message_text = payload["text"]
+                elif "message" in payload:
+                    message_text = payload["message"]
+                elif "content" in payload:
+                    message_text = payload["content"]
             
             # Extract thread/conversation ID if present
             if "thread_id" in payload:
+                thread_id = payload["thread_id"]
                 try:
-                    conversation_id = int(payload["thread_id"])
+                    conversation_id = int(thread_id) if thread_id else None
                 except (ValueError, TypeError):
                     pass
             elif "conversation_id" in payload:
@@ -119,35 +134,74 @@ async def chatkit_adapter(
         )
         
         # Convert our ChatResponse to ChatKit format
-        # ChatKit expects streaming format (SSE) or specific JSON structure
-        # For now, return JSON format that ChatKit can understand
+        # ChatKit expects SSE (Server-Sent Events) format with specific event structure
+        # Format: event: <event_type>\ndata: <json_data>\n\n
         
-        # ChatKit expects events in SSE format, but we'll return JSON for simplicity
-        # Format: { "messages": [...], "thread_id": "...", ... }
-        chatkit_response = {
-            "messages": [
-                {
-                    "role": "assistant",
-                    "content": chat_response.response,
-                    "id": f"msg_{chat_response.conversation_id}",
-                    "content_type": "output_text"
-                }
-            ],
-            "thread_id": str(chat_response.conversation_id),
-        }
-        
-        # Add tool calls if any
-        if chat_response.tool_calls:
-            chatkit_response["tool_calls"] = chat_response.tool_calls
+        async def generate_sse_stream():
+            """Generate SSE stream for ChatKit response."""
+            import uuid
+            
+            response_thread_id = str(chat_response.conversation_id)
+            
+            # Send thread metadata event if new conversation
+            if conversation_id is None:
+                yield f"event: thread.created\n"
+                yield f"data: {json.dumps({'id': response_thread_id, 'metadata': {}})}\n\n"
+            
+            # Generate unique message ID
+            message_id = f"msg_{uuid.uuid4().hex[:12]}"
+            
+            # Message item created event (ChatKit expects this format)
+            yield f"event: thread.message.item.created\n"
+            message_data = {
+                "id": message_id,
+                "role": "assistant",
+                "content": [
+                    {
+                        "type": "output_text",
+                        "text": chat_response.response
+                    }
+                ],
+                "content_type": "output_text"
+            }
+            yield f"data: {json.dumps(message_data)}\n\n"
+            
+            # Add tool calls as annotations if any
+            if chat_response.tool_calls:
+                for tool_call in chat_response.tool_calls:
+                    tool_name = tool_call.get("tool", "unknown")
+                    tool_params = tool_call.get("params", {})
+                    tool_result = tool_call.get("result", {})
+                    
+                    # Send tool call annotation
+                    yield f"event: thread.message.item.annotation.created\n"
+                    annotation_data = {
+                        "id": f"annotation_{uuid.uuid4().hex[:12]}",
+                        "message_id": message_id,
+                        "type": "tool_call",
+                        "tool_name": tool_name,
+                        "tool_params": tool_params,
+                        "tool_result": tool_result
+                    }
+                    yield f"data: {json.dumps(annotation_data)}\n\n"
+            
+            # Send thread message completed event
+            yield f"event: thread.message.completed\n"
+            yield f"data: {json.dumps({'id': message_id, 'thread_id': response_thread_id})}\n\n"
         
         logger.info(
-            f"ChatKit response prepared for user {current_user_id}",
+            f"ChatKit SSE response prepared for user {current_user_id}",
             extra={"conversation_id": chat_response.conversation_id}
         )
         
-        return JSONResponse(
-            content=chatkit_response,
-            media_type="application/json"
+        return StreamingResponse(
+            generate_sse_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no"
+            }
         )
         
     except HTTPException:

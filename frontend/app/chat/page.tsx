@@ -88,10 +88,10 @@ export default function ChatPage() {
             </div>
 
             {/* ChatKit Component */}
-            <div className="flex-1 rounded-2xl shadow-inner overflow-hidden" style={{ minHeight: '500px' }}>
+            <div className="flex-1 rounded-2xl shadow-inner overflow-hidden" style={{ minHeight: '500px', height: '100%' }}>
               <ChatKit 
                 control={control} 
-                className="h-full w-full"
+                style={{ height: '100%', width: '100%' }}
               />
             </div>
           </div>

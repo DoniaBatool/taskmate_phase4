@@ -43,6 +43,7 @@ async def create_task(
             title=task_data.title,
             description=task_data.description,
             priority=task_data.priority,
+            due_date=task_data.due_date,
         )
 
         # Add to database
@@ -183,13 +184,22 @@ async def update_task(
         )
     
     try:
-        # Update fields if provided
-        if task_data.title is not None:
-            task.title = task_data.title
-        if task_data.description is not None:
+        # Update fields if they were explicitly provided in the request body.
+        #
+        # We use __fields_set__ so that we can distinguish between:
+        # - field not present in JSON (do not touch existing value)
+        # - field present with null / concrete value (update, including clearing)
+        fields_set = task_data.__fields_set__
+
+        if "title" in fields_set:
+            task.title = task_data.title  # type: ignore[assignment]
+        if "description" in fields_set:
             task.description = task_data.description
-        if task_data.priority is not None:
-            task.priority = task_data.priority
+        if "priority" in fields_set:
+            task.priority = task_data.priority  # type: ignore[assignment]
+        if "due_date" in fields_set:
+            # Allow setting a new due date or clearing it by sending null
+            task.due_date = task_data.due_date
 
         # Update timestamp
         task.updated_at = datetime.utcnow()
