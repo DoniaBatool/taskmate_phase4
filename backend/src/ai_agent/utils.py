@@ -169,13 +169,21 @@ def format_task_list_response(tasks: List[Dict[str, Any]]) -> str:
         else:
             priority_str = "🟡 medium priority"
 
-        # Due date
+        # Due date - format with proper date and time
         due_str = ""
         if task.get('due_date'):
             try:
-                due_date = datetime.fromisoformat(task['due_date'])
-                due_str = f" - 📅 Due: {format_relative_date(due_date)}"
-            except:
+                # Parse ISO format date
+                if isinstance(task['due_date'], str):
+                    due_date = datetime.fromisoformat(task['due_date'].replace('Z', '+00:00'))
+                else:
+                    due_date = task['due_date']
+                
+                # Format with proper date and time: "Jan 20, 2026 at 3:00 PM"
+                date_str = due_date.strftime("%b %d, %Y at %I:%M %p").lstrip('0')
+                due_str = f" - 📅 Due: {date_str}"
+            except Exception as e:
+                logger.warning(f"Failed to format due date: {e}")
                 pass
 
         # Build line

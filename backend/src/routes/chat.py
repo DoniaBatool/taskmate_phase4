@@ -1290,17 +1290,23 @@ async def chat(
                     count = result.get('count', 0)
 
                     if count == 0:
-                        final_response = "You don't have any tasks yet. Add your first task above!"
+                        final_response = "📋 You don't have any tasks yet. Add your first task above!"
                     else:
-                        # Build task list for response
-                        task_list = []
+                        # Use proper formatting function with all details
+                        from ..ai_agent.utils import format_task_list_response
+                        # Ensure tasks have due_date field
+                        formatted_tasks = []
                         for task in tasks:
-                            task_status = "✅" if task.get('completed') else "⏳"
-                            priority = task.get('priority', 'medium')
-                            task_list.append(f"{task_status} {task.get('title')} ({priority})")
-
-                        task_display = "\n".join(task_list)
-                        final_response = f"Here are your tasks:\n\n{task_display}"
+                            task_dict = {
+                                'task_id': task.get('task_id'),
+                                'title': task.get('title'),
+                                'completed': task.get('completed', False),
+                                'priority': task.get('priority', 'medium'),
+                                'due_date': task.get('due_date')  # Include due_date if present
+                            }
+                            formatted_tasks.append(task_dict)
+                        
+                        final_response = format_task_list_response(formatted_tasks)
 
         return ChatResponse(
             conversation_id=conversation_id,

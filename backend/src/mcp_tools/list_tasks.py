@@ -165,7 +165,8 @@ def list_tasks(db: Session, params: ListTasksParams) -> ListTasksResult:
             "description": task.description,
             "completed": task.completed,
             "priority": task.priority,
-            "created_at": task.created_at
+            "due_date": task.due_date.isoformat() if task.due_date else None,
+            "created_at": task.created_at.isoformat() if task.created_at else None
         }
         for task in results
     ]

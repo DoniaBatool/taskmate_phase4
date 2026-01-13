@@ -217,13 +217,49 @@ class IntentDetector:
                     # Extract task ID if mentioned
                     task_id_match = re.search(r'task\s+#?(\d+)', content)
                     task_id = int(task_id_match.group(1)) if task_id_match else None
+                    
+                    # Extract task title from confirmation message
+                    task_title_match = re.search(r"task\s+['\"](.+?)['\"]", content)
+                    task_title = task_title_match.group(1).strip() if task_title_match else None
 
                     # Determine operation type
                     operation = None
+                    params = {}
+                    
                     if 'delete' in content or 'remove' in content:
                         operation = 'delete'
                     elif 'update' in content or 'change' in content or 'edit' in content:
                         operation = 'update'
+                        # Look back at previous user messages to extract update params
+                        for prev_msg in reversed(conversation_history[-6:]):
+                            if prev_msg.get('role') == 'user':
+                                prev_content = prev_msg.get('content', '').lower()
+                                # Pattern: "update the task X to Y" or "update X task to Y"
+                                update_match = re.search(
+                                    r'update\s+(?:the\s+)?(.+?)\s+task\s+to\s+(.+?)(?:$|,|\s+with|\s+and)',
+                                    prev_content,
+                                    re.IGNORECASE
+                                )
+                                if update_match:
+                                    # Extract new title
+                                    new_title = update_match.group(2).strip()
+                                    params['title'] = new_title
+                                    # Also extract task title if not already found
+                                    if not task_title:
+                                        task_title = update_match.group(1).strip()
+                                        task_title = re.sub(r'^(the|a|an)\s+', '', task_title, flags=re.IGNORECASE)
+                                    break
+                                # Pattern: "update task X title to Y"
+                                title_update_match = re.search(
+                                    r'update\s+(?:the\s+)?task\s+(.+?)\s+title\s+to\s+(.+?)(?:$|,|\s+with|\s+and)',
+                                    prev_content,
+                                    re.IGNORECASE
+                                )
+                                if title_update_match:
+                                    if not task_title:
+                                        task_title = title_update_match.group(1).strip()
+                                    params['title'] = title_update_match.group(2).strip()
+                                    break
                     elif 'incomplete' in content or 'not done' in content or 'pending' in content or 'undone' in content:
                         operation = 'incomplete'
                     elif 'complete' in content or 'mark' in content or 'done' in content:
@@ -233,8 +269,8 @@ class IntentDetector:
                         return {
                             'operation': operation,
                             'task_id': task_id,
-                            'task_title': None,
-                            'params': {}
+                            'task_title': task_title,
+                            'params': params
                         }
 
                 break  # Only check most recent assistant message
@@ -416,11 +452,12 @@ class IntentDetector:
         task_id = self._extract_task_id(message)
         task_title = self._extract_task_title(message, message_lower) if not task_id else None
 
-        # Special pattern: "update [title] task to [new_title]"
-        # Example: "update zoom class task to PIAIC CLASS"
+        # Special pattern: "update [title] task to [new_title]" or "update the task [title] to [new_title]"
+        # Example: "update zoom class task to PIAIC CLASS" or "update the task buy milk to buy fruits"
         if not task_id and not task_title:
+            # Pattern 1: "update the task X to Y"
             update_to_pattern = re.search(
-                r'update\s+(.+?)\s+task\s+to\s+(.+?)(?:$|,|\s+with|\s+and)',
+                r'update\s+the\s+task\s+(.+?)\s+to\s+(.+?)(?:$|,|\s+with|\s+and)',
                 message_lower,
                 re.IGNORECASE
             )
@@ -429,7 +466,21 @@ class IntentDetector:
                 # Clean up task title
                 task_title = re.sub(r'^(the|a|an)\s+', '', task_title, flags=re.IGNORECASE)
                 if task_title and len(task_title) >= 2:
-                    logger.info(f"Extracted task title from 'update X task to Y' pattern: '{task_title}'")
+                    logger.info(f"Extracted task title from 'update the task X to Y' pattern: '{task_title}'")
+            
+            # Pattern 2: "update X task to Y" (without "the")
+            if not task_title:
+                update_to_pattern = re.search(
+                    r'update\s+(.+?)\s+task\s+to\s+(.+?)(?:$|,|\s+with|\s+and)',
+                    message_lower,
+                    re.IGNORECASE
+                )
+                if update_to_pattern:
+                    task_title = update_to_pattern.group(1).strip()
+                    # Clean up task title
+                    task_title = re.sub(r'^(the|a|an)\s+', '', task_title, flags=re.IGNORECASE)
+                    if task_title and len(task_title) >= 2:
+                        logger.info(f"Extracted task title from 'update X task to Y' pattern: '{task_title}'")
 
         # If neither found, check conversation context for recently mentioned task
         if not task_id and not task_title:
