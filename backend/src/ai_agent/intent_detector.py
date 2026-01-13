@@ -268,6 +268,7 @@ class IntentDetector:
         - "update the grocery task"
         - "delete buy milk task"
         - "update task: buy fruits"
+        - "update buy milk" (without "task" word)
         """
         # Pattern 1: "the [title] task"
         match = re.search(r'the\s+(.+?)\s+task', message_lower)
@@ -275,12 +276,31 @@ class IntentDetector:
             return match.group(1).strip()
 
         # Pattern 2: "task [title]" or "task: [title]"
-        match = re.search(r'task:?\s+(.+?)(?:\s+|$)', message_lower)
+        match = re.search(r'task:?\s+(.+?)(?:\s+to\s+|\s+title\s+to\s+|$)', message_lower)
         if match:
             title = match.group(1).strip()
-            # Remove trailing words like "to", "with", etc.
-            title = re.sub(r'\s+(to|with|and)\s.*', '', title)
-            return title
+            # Remove trailing words like "to", "with", etc. but keep title
+            title = re.sub(r'\s+(to|with|and|title|priority|deadline|description)\s.*', '', title, flags=re.IGNORECASE)
+            if title and len(title) > 2:  # Valid title
+                return title
+
+        # Pattern 3: After update/delete/complete, extract title directly
+        # "update buy milk" or "delete grocery shopping"
+        for op in ['update', 'delete', 'remove', 'complete', 'mark']:
+            if op in message_lower:
+                # Extract text after operation word, before "task" or end
+                match = re.search(
+                    rf'{op}\s+(.+?)(?:\s+task|\s+to\s+|\s+title\s+to\s+|$)',
+                    message_lower
+                )
+                if match:
+                    title = match.group(1).strip()
+                    # Remove common stop words
+                    title = re.sub(r'^(the|a|an)\s+', '', title, flags=re.IGNORECASE)
+                    # Remove trailing update keywords
+                    title = re.sub(r'\s+(to|with|and|title|priority|deadline|description)\s.*', '', title, flags=re.IGNORECASE)
+                    if title and len(title) > 2 and not title.isdigit():  # Valid title, not a number
+                        return title
 
         return None
 
@@ -337,10 +357,13 @@ class IntentDetector:
         # This is CRITICAL: Detect if user is giving all details at once
         has_update_details = any([
             'change' in message_lower and 'to' in message_lower,
+            'update' in message_lower and 'to' in message_lower,
+            'set' in message_lower and ('to' in message_lower or 'as' in message_lower),
             'priority' in message_lower,
-            'deadline' in message_lower,
+            'deadline' in message_lower or 'due date' in message_lower or 'due_date' in message_lower,
             'description' in message_lower,
-            'title' in message_lower,
+            'title' in message_lower and 'to' in message_lower,
+            'remove' in message_lower and ('deadline' in message_lower or 'due date' in message_lower),
         ])
 
         if not has_update_details:
@@ -356,13 +379,21 @@ class IntentDetector:
         # User is providing update details - extract them!
 
         # Extract new title
-        # Pattern: "change (it to|title to|to) [new title]"
-        title_match = re.search(
-            r'change\s+(?:it\s+to|title\s+to|to)\s+(.+?)(?:,|\s+with|\s+and|$)',
-            message_lower
-        )
-        if title_match:
-            params['title'] = title_match.group(1).strip()
+        # Patterns: "change title to X", "update title to X", "set title to X"
+        title_patterns = [
+            r'(?:change|update|set)\s+(?:the\s+)?title\s+to\s+(.+?)(?:,|\s+with|\s+and|$|priority|deadline|description)',
+            r'(?:change|update)\s+(?:it\s+to|to)\s+(.+?)(?:,|\s+with|\s+and|$|priority|deadline|description)',
+            r'title\s+(?:to|as)\s+(.+?)(?:,|\s+with|\s+and|$|priority|deadline|description)',
+        ]
+        for pattern in title_patterns:
+            title_match = re.search(pattern, message_lower)
+            if title_match:
+                title = title_match.group(1).strip()
+                # Clean up title
+                title = re.sub(r'\s+(priority|deadline|description|and|with).*', '', title, flags=re.IGNORECASE)
+                if title and len(title) > 1:
+                    params['title'] = title
+                    break
 
         # Extract priority
         for priority_level, keywords in self.PRIORITY_MAP.items():
@@ -370,31 +401,39 @@ class IntentDetector:
                 params['priority'] = priority_level
                 break
 
-        # Extract deadline/due date
-        if any(keyword in message_lower for keyword in self.DATE_KEYWORDS):
-            # Extract the deadline phrase
-            deadline_match = re.search(
-                r'deadline\s+(?:is\s+)?(.+?)(?:,|\s+with|\s+and|description|$)',
-                message_lower
-            )
-            if deadline_match:
-                params['due_date'] = deadline_match.group(1).strip()
-            elif 'tomorrow' in message_lower:
-                params['due_date'] = 'tomorrow'
-            elif 'today' in message_lower:
-                params['due_date'] = 'today'
+        # Extract deadline/due date - check for remove first
+        if re.search(r'remove\s+(?:the\s+)?(?:deadline|due\s+date|due_date)|no\s+(?:deadline|due\s+date)|cancel\s+(?:deadline|due\s+date)', message_lower):
+            params['due_date'] = None  # Explicitly remove deadline
+        elif any(keyword in message_lower for keyword in self.DATE_KEYWORDS) or 'due date' in message_lower or 'deadline' in message_lower:
+            # Extract the deadline phrase - multiple patterns
+            deadline_patterns = [
+                r'(?:set|update|change)\s+(?:the\s+)?(?:due\s+date|deadline)\s+(?:for|to|as)\s+(.+?)(?:,|\s+with|\s+and|description|title|priority|$)',
+                r'due\s+date\s+(?:for|to|is|as)\s+(.+?)(?:,|\s+with|\s+and|description|title|priority|$)',
+                r'deadline\s+(?:is\s+)?(.+?)(?:,|\s+with|\s+and|description|title|priority|$)',
+            ]
+            for pattern in deadline_patterns:
+                deadline_match = re.search(pattern, message_lower)
+                if deadline_match:
+                    params['due_date'] = deadline_match.group(1).strip()
+                    break
+            # Fallback to simple keywords
+            if 'due_date' not in params:
+                if 'tomorrow' in message_lower:
+                    params['due_date'] = 'tomorrow'
+                elif 'today' in message_lower:
+                    params['due_date'] = 'today'
+                # Try to extract any date-like string
+                date_match = re.search(r'(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}|\w+\s+\d{1,2},?\s+\d{4}|\d{1,2}\s+\w+\s+\d{4})', message_lower)
+                if date_match:
+                    params['due_date'] = date_match.group(1).strip()
 
         # Extract description
         description_match = re.search(
-            r'description:?\s+(.+?)(?:,|\s+and|$)',
+            r'description:?\s+(.+?)(?:,|\s+and|title|priority|deadline|due\s+date|$)',
             message_lower
         )
         if description_match:
             params['description'] = description_match.group(1).strip()
-
-        # Check if "remove deadline" mentioned
-        if re.search(r'remove\s+deadline|no\s+deadline|cancel\s+deadline', message_lower):
-            params['due_date'] = None  # Explicitly remove deadline
 
         logger.info(
             f"Detected UPDATE intent: task_id={task_id}, task_title={task_title}, "

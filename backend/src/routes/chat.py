@@ -371,18 +371,21 @@ async def chat(
                 )
 
                 # BYPASS AI AGENT - Generate confirmation question ourselves
-                # First, get task details if we have task_id
+                # First, get task details if we have task_id or task_title
                 task_details = ""
                 if detected_intent.task_id:
+                    task_details = f" #{detected_intent.task_id}"
+                elif detected_intent.task_title:
+                    task_details = f" '{detected_intent.task_title}'"
+                    # Try to find task by title to get ID for better message
                     try:
-                        # Get task details to show in confirmation
-                        list_result = list_tasks(db, ListTasksParams(user_id=user_id, status="all"))
-                        for task in list_result.tasks:
-                            if task['task_id'] == detected_intent.task_id:
-                                title = task['title']
-                                priority = task.get('priority', 'medium')
-                                task_details = f" '{title}' ({priority} priority)"
-                                break
+                        find_params = FindTaskParams(
+                            user_id=user_id,
+                            title=detected_intent.task_title
+                        )
+                        find_result = find_task(db, find_params)
+                        if find_result:
+                            task_details = f" '{find_result.title}' (#{find_result.task_id})"
                     except:
                         pass
 
@@ -397,7 +400,7 @@ async def chat(
                     confirmation_msg = f"📝 Task{task_details} update kar doon? (Update this task?)\n\nReply 'yes' to confirm or 'no' to cancel."
                 elif detected_intent.operation == "update_ask":
                     # User wants to update but didn't provide details - ask what to update
-                    confirmation_msg = f"📝 Task{task_details} mein kya update karna hai? (What do you want to update?)\n\nYou can update:\n• Title\n• Priority (high/medium/low)\n• Deadline/due date\n• Description\n\nTell me what you want to change!"
+                    confirmation_msg = f"📝 Task{task_details} mein kya update karna hai? (What do you want to update?)\n\nYou can update:\n• Title (e.g., 'title to Buy groceries')\n• Priority (e.g., 'priority to high')\n• Due date (e.g., 'due date to Jan 20, 2026 3 PM')\n• Remove due date (e.g., 'remove due date')\n• Description\n\nTell me what you want to change!"
                 else:
                     confirmation_msg = "Kya aap sure hain? (Are you sure?)\n\nReply 'yes' to confirm or 'no' to cancel."
 
