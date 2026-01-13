@@ -90,6 +90,13 @@ export default function ChatPage() {
     setIsAuthenticated(true);
     setUserId(user);
     
+    // Mobile UX: default to sidebar closed on small screens
+    try {
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        setSidebarOpen(false);
+      }
+    } catch {}
+
     // Load conversations list and latest conversation
     const initializeChat = async () => {
       try {
@@ -106,7 +113,8 @@ export default function ChatPage() {
   const loadConversations = async (userId: string) => {
     setLoadingConversations(true);
     try {
-      const response = await apiFetch(`/api/${userId}/conversations`) as any;
+      // Conversations are user-scoped via JWT, not via userId path
+      const response = await apiFetch(`/api/conversations`) as any;
       if (response.conversations) {
         setConversations(response.conversations);
       }
@@ -119,10 +127,17 @@ export default function ChatPage() {
 
   const loadLatestConversation = async (userId: string) => {
     try {
-      const response = await apiFetch(`/api/${userId}/conversations`) as any;
-      if (response.conversations && response.conversations.length > 0) {
-        const latestConversation = response.conversations[0];
-        await loadConversation(userId, latestConversation.id);
+      // Prefer dedicated endpoint
+      const latest = await apiFetch(`/api/conversations/latest`) as any;
+      if (latest?.conversation_id) {
+        await loadConversation(userId, latest.conversation_id);
+      } else {
+        // Fallback: load first from list endpoint
+        const response = await apiFetch(`/api/conversations`) as any;
+        if (response.conversations && response.conversations.length > 0) {
+          const latestConversation = response.conversations[0];
+          await loadConversation(userId, latestConversation.id);
+        }
       }
     } catch (error) {
       console.error('Failed to load latest conversation:', error);
@@ -132,6 +147,12 @@ export default function ChatPage() {
   const loadConversation = async (userId: string, convId: number) => {
     try {
       setConversationId(convId);
+      // Mobile UX: close sidebar after selecting a conversation
+      try {
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+          setSidebarOpen(false);
+        }
+      } catch {}
       const messagesResponse = await apiFetch(`/api/conversations/${convId}/messages`) as any;
       if (messagesResponse.messages) {
         const loadedMessages: Message[] = messagesResponse.messages.map((msg: any) => ({
@@ -232,11 +253,24 @@ export default function ChatPage() {
     <>
       <Header />
       <div className="flex min-h-screen bg-theme-background">
+        {/* Mobile backdrop for sidebar */}
+        {sidebarOpen ? (
+          <button
+            type="button"
+            aria-label="Close sidebar"
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          />
+        ) : null}
+
         {/* Sidebar */}
         <div
           className={`${
-            sidebarOpen ? 'w-64' : 'w-0'
-          } transition-all duration-300 border-r border-theme bg-theme-surface overflow-hidden flex flex-col`}
+            // Mobile: overlay sidebar
+            sidebarOpen
+              ? 'w-64 fixed inset-y-0 left-0 z-40'
+              : 'w-0'
+          } md:relative md:z-auto transition-all duration-300 border-r border-theme bg-theme-surface overflow-hidden flex flex-col`}
         >
           <div className="p-4 border-b border-theme">
             <button
@@ -300,7 +334,7 @@ export default function ChatPage() {
         </div>
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           {/* Top Bar */}
           <div className="border-b border-theme bg-theme-surface p-4 flex items-center justify-between">
             <button
@@ -329,16 +363,6 @@ export default function ChatPage() {
                   <p className="text-2xl mb-4">👋 Welcome!</p>
                   <p className="text-base mb-2">Start a conversation to manage your tasks with AI</p>
                   <p className="text-sm mt-4 text-theme-tertiary">Try: &quot;Add a task to buy groceries&quot; or &quot;Show my tasks&quot;</p>
-                  <div className="mt-6 text-left text-sm text-theme-tertiary space-y-2 max-w-md mx-auto">
-                    <p className="font-semibold text-theme-secondary mb-3">You can:</p>
-                    <p>• Add tasks: &quot;Add task to call mom tomorrow&quot;</p>
-                    <p>• Update by ID or title: &quot;Update task 1 title to Buy groceries&quot; or &quot;Update buy milk task title to Buy groceries&quot;</p>
-                    <p>• Delete by ID or title: &quot;Delete task 2&quot; or &quot;Delete buy milk task&quot;</p>
-                    <p>• Mark complete: &quot;Mark task 1 as complete&quot; or &quot;Mark buy milk task as complete&quot;</p>
-                    <p>• Mark incomplete: &quot;Mark task 1 as incomplete&quot; or &quot;Mark grocery task as incomplete&quot;</p>
-                    <p>• Set due dates: &quot;Set due date for task 1 to Jan 20, 2026 3 PM&quot;</p>
-                    <p>• Remove due dates: &quot;Remove due date from task 1&quot;</p>
-                  </div>
                 </div>
               </div>
             ) : (

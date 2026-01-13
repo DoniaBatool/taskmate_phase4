@@ -19,7 +19,7 @@ export default function TasksPage() {
   const [error, setError] = useState<string | null>(null);
   const [actioning, setActioning] = useState(false);
   const [editing, setEditing] = useState<Task | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'table'>('table'); // Default to table view
+  const [viewMode, setViewMode] = useState<'list' | 'table'>('table'); // Default, but we auto-switch on mobile
 
   const hasToken = useMemo(() => !!getToken(), []);
 
@@ -28,6 +28,12 @@ export default function TasksPage() {
       router.replace('/login');
       return;
     }
+    // Mobile UX: default to list view on small screens
+    try {
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        setViewMode('list');
+      }
+    } catch {}
     fetchTasks();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasToken]);
@@ -164,9 +170,9 @@ export default function TasksPage() {
         </Card>
 
         <Card className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold text-theme-primary">Task list</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-sm text-theme-secondary">View:</span>
               <button
                 onClick={() => setViewMode('table')}

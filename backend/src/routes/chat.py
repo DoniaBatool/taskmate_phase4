@@ -1286,7 +1286,12 @@ async def chat(
                                     'description': result.description,
                                     'priority': result.priority,
                                     'completed': result.completed,
-                                    'created_at': result.created_at.isoformat() if result.created_at else None
+                                    # find_task tool returns created_at as a string already
+                                    'created_at': (
+                                        result.created_at.isoformat()
+                                        if hasattr(result.created_at, "isoformat")
+                                        else result.created_at
+                                    ) if result and result.created_at else None
                                 } if result else None
                             }
                         })
