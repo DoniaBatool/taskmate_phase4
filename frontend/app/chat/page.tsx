@@ -25,13 +25,14 @@ export default function ChatPage() {
     setUserId(user);
   }, [router]);
 
+  // Build API URL for ChatKit adapter endpoint
+  const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/chatkit`;
+
   const { control } = useChatKit({
     api: {
       // Backend endpoint URL - ChatKit will send all requests here
       // Use ChatKit adapter endpoint that converts ChatKit protocol to our format
-      url: userId 
-        ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/chatkit`
-        : undefined,
+      url: apiUrl,
       
       // Domain key for production (required for hosted ChatKit)
       domainKey: process.env.NEXT_PUBLIC_OPENAI_DOMAIN_KEY || undefined,
