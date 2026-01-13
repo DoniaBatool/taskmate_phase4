@@ -28,27 +28,33 @@ export default function ChatPage() {
   // ChatKit configuration for custom backend
   const [error, setError] = useState<string | null>(null);
   const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/chatkit`;
-  const domainKey = process.env.NEXT_PUBLIC_OPENAI_DOMAIN_KEY || '';
+  
+  // Build API config with proper types
+  const apiConfig: any = {
+    // Custom backend URL
+    url: apiUrl,
+    // Custom fetch to inject JWT authentication
+    fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+      const token = getToken();
+      return fetch(input, {
+        ...init,
+        headers: {
+          ...init?.headers,
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+        },
+        credentials: 'include',
+      });
+    },
+  };
+
+  // Only add domainKey if it exists (required for production)
+  const domainKey = process.env.NEXT_PUBLIC_OPENAI_DOMAIN_KEY;
+  if (domainKey) {
+    apiConfig.domainKey = domainKey;
+  }
   
   const { control } = useChatKit({
-    api: {
-      // Custom backend URL
-      url: apiUrl,
-      // Domain key for production allowlist
-      ...(domainKey && { domainKey }),
-      // Custom fetch to inject JWT authentication
-      fetch: async (input, init) => {
-        const token = getToken();
-        return fetch(input, {
-          ...init,
-          headers: {
-            ...init?.headers,
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-          },
-          credentials: 'include',
-        });
-      },
-    },
+    api: apiConfig,
     // Error handling
     onError: (err) => {
       console.error('ChatKit error:', err);
