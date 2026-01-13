@@ -494,14 +494,14 @@ class IntentDetector:
                         task_match = re.search(r"task\s+['\"](.+?)['\"]|task\s+#?(\d+)", content)
                         if task_match:
                             if task_match.group(1):  # Title found
-                            task_title = task_match.group(1).strip()
-                            logger.info(f"Found task title from assistant context: '{task_title}'")
-                            break
-                        elif task_match.group(2):  # ID found
-                            try:
-                                task_id = int(task_match.group(2))
-                                logger.info(f"Found task ID from assistant context: {task_id}")
+                                task_title = task_match.group(1).strip()
+                                logger.info(f"Found task title from assistant context: '{task_title}'")
                                 break
+                            elif task_match.group(2):  # ID found
+                                try:
+                                    task_id = int(task_match.group(2))
+                                    logger.info(f"Found task ID from assistant context: {task_id}")
+                                    break
                             except:
                                 pass
                 
