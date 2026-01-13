@@ -53,8 +53,23 @@ export function TaskForm({ onSubmit, initialTask = null, loading = false }: Prop
     }
     setError(null);
 
-    // Convert due_date to ISO format if provided
-    const dueDateISO = dueDate ? new Date(dueDate).toISOString() : undefined;
+    // Convert due_date to ISO format preserving local timezone
+    // datetime-local input gives us local time, we need to preserve it
+    let dueDateISO: string | undefined = undefined;
+    if (dueDate) {
+      // Parse the datetime-local value (format: YYYY-MM-DDTHH:mm)
+      // and create a Date object that represents that exact time in user's timezone
+      const localDate = new Date(dueDate);
+      
+      // Get timezone offset in minutes and convert to milliseconds
+      const timezoneOffset = localDate.getTimezoneOffset() * 60000;
+      
+      // Adjust for timezone to get the actual local time the user selected
+      const adjustedDate = new Date(localDate.getTime() - timezoneOffset);
+      
+      // Now convert to ISO string (this will be in UTC but represents the local time user selected)
+      dueDateISO = adjustedDate.toISOString();
+    }
 
     await onSubmit({
       title,

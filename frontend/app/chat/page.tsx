@@ -25,38 +25,35 @@ export default function ChatPage() {
     setUserId(user);
   }, [router]);
 
-  // Build API URL for ChatKit adapter endpoint
+  // ChatKit configuration for custom backend
+  const [error, setError] = useState<string | null>(null);
   const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/chatkit`;
+  const domainKey = process.env.NEXT_PUBLIC_OPENAI_DOMAIN_KEY || '';
   
-  // Domain key for production (required for hosted ChatKit)
-  // Use empty string fallback so TypeScript sees a guaranteed string
-  const domainKey = process.env.NEXT_PUBLIC_OPENAI_DOMAIN_KEY ?? '';
-
-  // Build API config. Domain key is always a string (may be empty in dev).
-  const apiConfig = {
-    url: apiUrl,
-    domainKey,
-    // Custom fetch function to inject JWT token in headers
-    fetch: async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-      const token = getToken();
-      
-      // Add authentication header
-      const headers = {
-        ...init?.headers,
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      };
-
-      return fetch(input, {
-        ...init,
-        headers,
-        credentials: 'include',
-      });
-    },
-  };
-
   const { control } = useChatKit({
-    api: apiConfig,
+    api: {
+      // Custom backend URL
+      url: apiUrl,
+      // Domain key for production allowlist
+      ...(domainKey && { domainKey }),
+      // Custom fetch to inject JWT authentication
+      fetch: async (input, init) => {
+        const token = getToken();
+        return fetch(input, {
+          ...init,
+          headers: {
+            ...init?.headers,
+            ...(token && { 'Authorization': `Bearer ${token}` }),
+          },
+          credentials: 'include',
+        });
+      },
+    },
+    // Error handling
+    onError: (err) => {
+      console.error('ChatKit error:', err);
+      setError('Failed to load chat. Please refresh the page.');
+    },
   });
 
   if (!isAuthenticated || !userId) {
@@ -88,12 +85,26 @@ export default function ChatPage() {
             </div>
 
             {/* ChatKit Component */}
-            <div className="flex-1 rounded-2xl shadow-inner overflow-hidden" style={{ minHeight: '500px', height: '100%' }}>
-              <ChatKit 
-                control={control} 
-                style={{ height: '100%', width: '100%' }}
-              />
-            </div>
+            {error ? (
+              <div className="flex-1 rounded-2xl shadow-inner overflow-hidden p-8 bg-red-500/10 border border-red-500/20" style={{ minHeight: '500px' }}>
+                <div className="text-center">
+                  <p className="text-red-400 mb-4">{error}</p>
+                  <button 
+                    onClick={() => window.location.reload()} 
+                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Refresh Page
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 rounded-2xl shadow-inner overflow-hidden" style={{ minHeight: '500px', height: '100%' }}>
+                <ChatKit 
+                  control={control} 
+                  style={{ height: '100%', width: '100%' }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
