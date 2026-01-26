@@ -816,12 +816,9 @@ class IntentDetector:
         if not task_id and not task_title:
             task_title = self._extract_task_title(message, message_lower)
 
-        # If neither found, check conversation context for recently mentioned task
-        if not task_id and not task_title:
-            task_id = self._get_context_task_id(conversation_history)
-            # Also try to get task title from context
-            if not task_id:
-                task_title = self._get_context_task_title(conversation_history)
+        # IMPORTANT: Do NOT automatically get task from context!
+        # User wants us to ALWAYS ask "which task?" first when no task is specified.
+        # Only get from context if this is a follow-up response to assistant's clarification
 
         # If still not found but user is providing update details (like "update the title: X"),
         # this might be a follow-up to a previous update request - check conversation context
@@ -1070,9 +1067,9 @@ class IntentDetector:
         task_id = self._extract_task_id(message)
         task_title = self._extract_task_title(message, message_lower) if not task_id else None
 
-        # Check conversation context if not found
-        if not task_id and not task_title:
-            task_id = self._get_context_task_id(conversation_history)
+        # IMPORTANT: Do NOT automatically get task from context!
+        # User wants us to ALWAYS ask "which task?" first when no task is specified.
+        # Only get from context if this is a follow-up response to assistant's clarification
 
         # If still not found, check if previous message was asking for task name
         # and current message is just providing the title (follow-up)

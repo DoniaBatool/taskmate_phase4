@@ -757,6 +757,10 @@ async def chat(
                             if due_date:
                                 update_params['due_date'] = due_date.isoformat()
 
+                    # Add completed status if provided
+                    if 'completed' in detected_intent.params and detected_intent.params['completed'] is not None:
+                        update_params['completed'] = detected_intent.params['completed']
+
                     # Check if we have actual update fields (not just task_id)
                     has_updates = len(update_params) > 1
                     
@@ -805,6 +809,9 @@ async def chat(
                                         confirmation_lines.append(f"  • Due Date: → {update_params['due_date']}")
                                 else:
                                     confirmation_lines.append(f"  • Due Date: → (removed)")
+                            if 'completed' in update_params:
+                                status = "Complete ✅" if update_params['completed'] else "Incomplete ⏳"
+                                confirmation_lines.append(f"  • Status: → {status}")
                             
                             confirmation_lines.append("\n**Kya aap sure hain? (Are you sure?)**")
                             confirmation_lines.append("Reply 'yes' to confirm or 'no' to cancel.")
