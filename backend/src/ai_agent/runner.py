@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 import logging
 from datetime import datetime
 
-from openai import OpenAI
+from openai import OpenAI, APIError, AuthenticationError, RateLimitError, APIConnectionError
 
 from .agent import initialize_agent, get_system_prompt
 from .tools import register_tools
@@ -329,6 +329,82 @@ async def run_agent(
         )
         return AgentResponse(
             response="I'm having trouble processing your request right now. Please try again in a moment.",
+            tool_calls=[]
+        )
+    except AuthenticationError as e:
+        # OpenAI API authentication error (invalid API key)
+        logger.error(
+            "OpenAI API authentication failed",
+            extra={
+                "user_id": user_id,
+                "error": str(e),
+                "error_type": "authentication_error"
+            },
+            exc_info=True
+        )
+        return AgentResponse(
+            response="I'm experiencing a configuration issue. Please contact support.",
+            tool_calls=[]
+        )
+    except RateLimitError as e:
+        # OpenAI API rate limit exceeded
+        logger.error(
+            "OpenAI API rate limit exceeded",
+            extra={
+                "user_id": user_id,
+                "error": str(e),
+                "error_type": "rate_limit_error"
+            },
+            exc_info=True
+        )
+        return AgentResponse(
+            response="I'm receiving too many requests right now. Please wait a moment and try again.",
+            tool_calls=[]
+        )
+    except APIConnectionError as e:
+        # OpenAI API connection error
+        logger.error(
+            "OpenAI API connection failed",
+            extra={
+                "user_id": user_id,
+                "error": str(e),
+                "error_type": "connection_error"
+            },
+            exc_info=True
+        )
+        return AgentResponse(
+            response="I'm having trouble connecting to the AI service. Please check your internet connection and try again.",
+            tool_calls=[]
+        )
+    except APIError as e:
+        # General OpenAI API error
+        logger.error(
+            "OpenAI API error",
+            extra={
+                "user_id": user_id,
+                "error": str(e),
+                "error_type": "api_error",
+                "status_code": getattr(e, 'status_code', None)
+            },
+            exc_info=True
+        )
+        return AgentResponse(
+            response="I encountered an issue with the AI service. Please try again in a moment.",
+            tool_calls=[]
+        )
+    except ValueError as e:
+        # Configuration or validation errors
+        logger.error(
+            "Configuration error in agent",
+            extra={
+                "user_id": user_id,
+                "error": str(e),
+                "error_type": "value_error"
+            },
+            exc_info=True
+        )
+        return AgentResponse(
+            response="I'm experiencing a configuration issue. Please contact support.",
             tool_calls=[]
         )
     except Exception as e:
