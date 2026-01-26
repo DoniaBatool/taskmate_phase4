@@ -1067,8 +1067,49 @@ class IntentDetector:
                     task_title = potential_title
                     logger.info(f"Extracted task title from follow-up message: '{task_title}'")
 
+        # If task not specified, return intent asking which task to delete
         if not task_id and not task_title:
-            return None
+            # Check if assistant previously asked "which task" - if so, this is a follow-up
+            if conversation_history:
+                last_assistant_msg = None
+                for msg in reversed(conversation_history[-3:]):
+                    if msg.get('role') == 'assistant':
+                        last_assistant_msg = msg.get('content', '').lower()
+                        break
+                
+                # If assistant asked "which task" or similar, current message is likely the task identifier
+                if last_assistant_msg and any(keyword in last_assistant_msg for keyword in [
+                    'which task', 'task name', 'task you want', 'task to delete',
+                    'provide the name', 'mention the task', 'task number', 'kaunsa task',
+                    'wala task', 'task delete kerna'
+                ]):
+                    # Current message is likely just the task title or ID
+                    potential_title = message.strip()
+                    # Try to extract task ID first
+                    task_id_match = re.search(r'#?(\d+)', potential_title)
+                    if task_id_match:
+                        try:
+                            task_id = int(task_id_match.group(1))
+                            logger.info(f"Extracted task ID from follow-up: {task_id}")
+                        except ValueError:
+                            pass
+                    
+                    # If no ID, treat as title
+                    if not task_id:
+                        potential_title = re.sub(r'^(the|a|an|delete|remove)\s+', '', potential_title, flags=re.IGNORECASE)
+                        potential_title = re.sub(r'\s+(task|delete|remove).*$', '', potential_title, flags=re.IGNORECASE)
+                        if potential_title and len(potential_title) >= 2 and not potential_title.isdigit():
+                            task_title = potential_title
+                            logger.info(f"Extracted task title from follow-up: '{task_title}'")
+            
+            # If still no task identifier, return intent asking which task
+            if not task_id and not task_title:
+                return Intent(
+                    operation="delete_ask",  # Special operation to ask which task
+                    task_id=None,
+                    task_title=None,
+                    needs_confirmation=False  # Not a confirmation, just asking for task
+                )
 
         logger.info(
             f"Detected DELETE intent: task_id={task_id}, task_title={task_title}"

@@ -376,8 +376,26 @@ async def chat(
                     message_lower = request.message.lower().strip()
                     is_no = any(keyword in message_lower for keyword in ['no', 'nahi', 'cancel', 'na', 'nope', 'not'])
                     if is_no and len(message_lower.split()) <= 3:  # Short message like "no", "nahi", "cancel"
-                        # User cancelled - return friendly cancellation message
-                        cancellation_msg = "❌ Update cancelled. No changes were made."
+                        # Determine operation type from assistant's message
+                        operation_type = "update"  # default
+                        if 'delete' in last_assistant_msg or '🗑️' in last_assistant_msg:
+                            operation_type = "delete"
+                        elif 'complete' in last_assistant_msg or '✅' in last_assistant_msg:
+                            operation_type = "complete"
+                        elif 'incomplete' in last_assistant_msg or '⏳' in last_assistant_msg:
+                            operation_type = "incomplete"
+                        elif 'update' in last_assistant_msg or '📝' in last_assistant_msg:
+                            operation_type = "update"
+                        
+                        # Generate operation-specific cancellation message
+                        if operation_type == "delete":
+                            cancellation_msg = "❌ Deletion cancelled. No task was deleted."
+                        elif operation_type == "complete":
+                            cancellation_msg = "❌ Completion cancelled. Task status unchanged."
+                        elif operation_type == "incomplete":
+                            cancellation_msg = "❌ Status change cancelled. Task status unchanged."
+                        else:
+                            cancellation_msg = "❌ Update cancelled. No changes were made."
                         
                         conversation_service.add_message(
                             conversation_id=conversation_id,
@@ -513,6 +531,22 @@ async def chat(
                         f"• mark as complete / mark as incomplete\n\n"
                         f"Tell me the changes, then I'll confirm and apply them."
                     )
+                elif detected_intent.operation == "delete_ask":
+                    # User wants to delete but didn't specify which task - ask which task
+                    list_params = ListTasksParams(user_id=user_id, status="all")
+                    list_result = list_tasks(db, list_params)
+                    if list_result.tasks:
+                        task_list = "\n".join([f"  • #{t['task_id']}: {t['title']}" for t in list_result.tasks[:10]])
+                        confirmation_msg = (
+                            f"🗑️ Kaunsa task delete karna hai? (Which task would you like to delete?)\n\n"
+                            f"Here are your current tasks:\n{task_list}\n\n"
+                            f"Please specify the task by ID (e.g., #70) or title (e.g., 'buy groceries')."
+                        )
+                    else:
+                        confirmation_msg = (
+                            f"🗑️ Kaunsa task delete karna hai? (Which task would you like to delete?)\n\n"
+                            f"You don't have any tasks to delete."
+                        )
                 else:
                     confirmation_msg = "Kya aap sure hain? (Are you sure?)\n\nReply 'yes' to confirm or 'no' to cancel."
 
