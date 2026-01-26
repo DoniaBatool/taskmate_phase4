@@ -1109,15 +1109,38 @@ async def chat(
                 if tool_name == 'add_task':
                     # Execute add_task tool
                     try:
+                        logger.info(
+                            f"Executing add_task for user {user_id}",
+                            extra={
+                                "user_id": user_id,
+                                "title": tool_params.get('title'),
+                                "priority": tool_params.get('priority', 'medium')
+                            }
+                        )
+                        
+                        # Validate title is provided
+                        if not tool_params.get('title') or not tool_params.get('title').strip():
+                            raise ValueError("Task title is required. Please provide a title for the task.")
+                        
                         # Pass due_date as string - add_task tool will parse it
                         params = AddTaskParams(
                             user_id=user_id,
-                            title=tool_params.get('title'),
+                            title=tool_params.get('title').strip(),
                             description=tool_params.get('description'),
                             priority=tool_params.get('priority', 'medium'),
                             due_date=tool_params.get('due_date')  # Pass as string
                         )
                         result = add_task(db, params)
+                        
+                        logger.info(
+                            f"add_task succeeded: task_id={result.task_id}, title={result.title}",
+                            extra={
+                                "user_id": user_id,
+                                "task_id": result.task_id,
+                                "task_title": result.title
+                            }
+                        )
+                        
                         executed_tools.append({
                             'tool': 'add_task',
                             'params': tool_params,
@@ -1131,8 +1154,33 @@ async def chat(
                                 'created_at': result.created_at.isoformat()
                             }
                         })
+                    except ValueError as e:
+                        # Validation errors - provide user-friendly message
+                        error_msg = str(e)
+                        logger.error(
+                            f"add_task validation failed: {error_msg}",
+                            extra={
+                                "user_id": user_id,
+                                "error": error_msg,
+                                "error_type": "validation_error",
+                                "params": tool_params
+                            },
+                            exc_info=True
+                        )
+                        tool_errors.append({"tool": "add_task", "error": error_msg})
                     except Exception as e:
-                        logger.error(f"Tool execution failed: {e}", exc_info=True)
+                        error_msg = str(e)
+                        logger.error(
+                            f"add_task execution failed: {error_msg}",
+                            extra={
+                                "user_id": user_id,
+                                "error": error_msg,
+                                "error_type": type(e).__name__,
+                                "params": tool_params
+                            },
+                            exc_info=True
+                        )
+                        tool_errors.append({"tool": "add_task", "error": error_msg})
                         # Continue even if tool fails
 
                 elif tool_name == 'list_tasks':

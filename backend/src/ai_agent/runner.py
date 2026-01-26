@@ -378,20 +378,37 @@ async def run_agent(
         )
     except APIError as e:
         # General OpenAI API error
+        error_msg = str(e)
+        status_code = getattr(e, 'status_code', None)
+        
         logger.error(
-            "OpenAI API error",
+            f"OpenAI API error: {error_msg}",
             extra={
                 "user_id": user_id,
-                "error": str(e),
+                "error": error_msg,
                 "error_type": "api_error",
-                "status_code": getattr(e, 'status_code', None)
+                "status_code": status_code,
+                "message": message[:100] if message else None
             },
             exc_info=True
         )
-        return AgentResponse(
-            response="I encountered an issue with the AI service. Please try again in a moment.",
-            tool_calls=[]
-        )
+        
+        # Provide more specific error message based on status code
+        if status_code == 429:
+            return AgentResponse(
+                response="I'm receiving too many requests right now. Please wait a moment and try again.",
+                tool_calls=[]
+            )
+        elif status_code == 500 or status_code == 502 or status_code == 503:
+            return AgentResponse(
+                response="The AI service is temporarily unavailable. Please try again in a moment.",
+                tool_calls=[]
+            )
+        else:
+            return AgentResponse(
+                response=f"I encountered an issue with the AI service (Error: {status_code or 'Unknown'}). Please try again in a moment.",
+                tool_calls=[]
+            )
     except ValueError as e:
         # Configuration or validation errors
         logger.error(
