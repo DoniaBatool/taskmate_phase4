@@ -1052,6 +1052,40 @@ async def chat(
                     extra={"user_id": user_id, "status": detected_intent.params.get('status', 'all')}
                 )
 
+            # Handle ADD intent (create task)
+            elif detected_intent.operation == "add":
+                # User wants to add a task but didn't provide title
+                # Ask for the task title
+                add_msg = (
+                    "Sure! I'd be happy to help you add a task. "
+                    "What's the title of the task you'd like to add?"
+                )
+                
+                conversation_service.add_message(
+                    conversation_id=conversation_id,
+                    user_id=user_id,
+                    role="user",
+                    content=request.message
+                )
+                conversation_service.add_message(
+                    conversation_id=conversation_id,
+                    user_id=user_id,
+                    role="assistant",
+                    content=add_msg
+                )
+                conversation_service.update_conversation_timestamp(conversation_id)
+                
+                logger.info(
+                    f"ADD intent detected - asking for task title",
+                    extra={"user_id": user_id}
+                )
+                
+                return ChatResponse(
+                    conversation_id=conversation_id,
+                    response=add_msg,
+                    tool_calls=[]
+                )
+
             # Handle INCOMPLETE intent (mark as not done/pending)
             elif detected_intent.operation == "incomplete" and not detected_intent.needs_confirmation:
                 task_id = detected_intent.task_id
