@@ -1070,12 +1070,33 @@ async def chat(
 
         # Run AI agent (T065)
         # If forced tool calls exist, we still call AI for conversational response
-        agent_response = await run_agent(
-            user_id=user_id,
-            message=request.message,
-            conversation_history=conversation_history,
-            tools=tools
-        )
+        # BUT: If we have confirmed forced tool calls, skip AI agent to avoid errors
+        skip_ai_agent = False
+        if forced_tool_calls:
+            # Check if all forced tool calls are confirmed operations (update, delete, complete, incomplete)
+            confirmed_operations = ['update_task', 'delete_task', 'complete_task']
+            skip_ai_agent = all(
+                tool_call.get('tool') in confirmed_operations 
+                for tool_call in forced_tool_calls
+            )
+        
+        if skip_ai_agent:
+            # Skip AI agent for confirmed operations - generate response directly
+            logger.info(
+                f"Skipping AI agent for confirmed forced tool calls: {[tc.get('tool') for tc in forced_tool_calls]}",
+                extra={"user_id": user_id, "forced_tools": [tc.get('tool') for tc in forced_tool_calls]}
+            )
+            agent_response = AgentResponse(
+                response="",  # Will be generated from tool results
+                tool_calls=[]
+            )
+        else:
+            agent_response = await run_agent(
+                user_id=user_id,
+                message=request.message,
+                conversation_history=conversation_history,
+                tools=tools
+            )
 
         # Execute tool calls if any
         # PRIORITY: Forced tool calls execute FIRST, then AI-suggested tools
@@ -1508,6 +1529,49 @@ async def chat(
         # Return response (T068)
         # Enhance response for list_tasks tool with actual task data
         final_response = agent_response.response
+        
+        # If we skipped AI agent, generate response from tool results
+        if skip_ai_agent and executed_tools:
+            response_lines = []
+            for tool_call in executed_tools:
+                tool_name = tool_call.get('tool')
+                tool_result = tool_call.get('result', {})
+                
+                if tool_name == 'update_task' and 'error' not in tool_result:
+                    task_id = tool_result.get('task_id')
+                    title = tool_result.get('title', 'task')
+                    updates = []
+                    if 'priority' in tool_call.get('params', {}):
+                        updates.append(f"priority to {tool_result.get('priority')}")
+                    if 'due_date' in tool_call.get('params', {}):
+                        if tool_result.get('due_date'):
+                            updates.append("due date")
+                        else:
+                            updates.append("removed due date")
+                    if 'completed' in tool_call.get('params', {}):
+                        status = "complete" if tool_result.get('completed') else "incomplete"
+                        updates.append(f"marked as {status}")
+                    if 'title' in tool_call.get('params', {}):
+                        updates.append(f"title to '{tool_result.get('title')}'")
+                    
+                    if updates:
+                        response_lines.append(f"✅ I've updated task #{task_id} ({title}): {', '.join(updates)}.")
+                    else:
+                        response_lines.append(f"✅ I've updated task #{task_id} ({title}).")
+                elif tool_name == 'delete_task' and 'error' not in tool_result:
+                    task_id = tool_result.get('task_id')
+                    title = tool_result.get('title', 'task')
+                    response_lines.append(f"✅ I've removed task #{task_id} ({title}) from your tasks.")
+                elif tool_name == 'complete_task' and 'error' not in tool_result:
+                    task_id = tool_result.get('task_id')
+                    title = tool_result.get('title', 'task')
+                    response_lines.append(f"✅ I've marked task #{task_id} ({title}) as complete.")
+            
+            if response_lines:
+                final_response = "\n".join(response_lines)
+            elif not final_response:
+                final_response = "✅ Done!"
+        
         if tool_errors:
             # Never claim success if a tool failed
             lines = ["⚠️ I couldn't complete your request due to an error:"]
