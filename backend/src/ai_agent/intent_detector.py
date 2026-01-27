@@ -369,6 +369,17 @@ class IntentDetector:
                 is_asking_add_title = any(p in assistant_msg for p in add_title_patterns)
 
                 if is_asking_add_title:
+                    # If user sent a different command (delete/update/list), don't treat as title
+                    if self._matches_any_pattern(message, self.DELETE_PATTERNS):
+                        logger.info("User said delete/remove in add-title context - treat as delete intent")
+                        return None
+                    if self._matches_any_pattern(message, self.UPDATE_PATTERNS):
+                        logger.info("User said update in add-title context - treat as update intent")
+                        return None
+                    if self._matches_any_pattern(message, self.LIST_PATTERNS):
+                        logger.info("User said show/list in add-title context - treat as list intent")
+                        return None
+
                     # Extract title from current message
                     task_title = message.strip()
                     task_title = re.sub(r'^(the\s+)?title\s+of\s+the\s+task\s+is\s+', '', task_title, flags=re.IGNORECASE)
@@ -376,25 +387,29 @@ class IntentDetector:
                     task_title = re.sub(r'^(task\s+title\s+is|task\s+title:|title:|it\s+is|it\'s)\s+', '', task_title, flags=re.IGNORECASE)
                     task_title = task_title.strip()
 
-                    # Reject command phrases used as title (user re-sent "add task" etc.)
+                    # Reject command phrases used as title (user re-sent "add task" / "delete task" etc.)
                     ADD_COMMAND_PHRASES = frozenset([
                         'add task', 'create task', 'new task',
                         'add a task', 'create a task', 'new a task',
                         'add new task', 'create new task'
                     ])
+                    OTHER_COMMAND_PHRASES = frozenset([
+                        'delete task', 'delete the task', 'remove task', 'remove the task',
+                        'update task', 'update the task', 'show all tasks', 'show task list',
+                        'list tasks', 'list my tasks', 'mark complete', 'mark as complete'
+                    ])
                     if task_title and len(task_title) >= 2:
-                        if task_title.lower() in ADD_COMMAND_PHRASES:
-                            logger.info(f"Rejecting add command as title: '{task_title}'")
-                            pass  # fall through, do not return this as title
-                        else:
-                            logger.info(f"Detected add follow-up title: '{task_title}'")
-                            return Intent(
-                                operation="add",
-                                task_id=None,
-                                task_title=None,
-                                params={"title": task_title},
-                                needs_confirmation=False
-                            )
+                        if task_title.lower() in ADD_COMMAND_PHRASES or task_title.lower() in OTHER_COMMAND_PHRASES:
+                            logger.info(f"Rejecting command as add-task title: '{task_title}'")
+                            return None
+                        logger.info(f"Detected add follow-up title: '{task_title}'")
+                        return Intent(
+                            operation="add",
+                            task_id=None,
+                            task_title=None,
+                            params={"title": task_title},
+                            needs_confirmation=False
+                        )
 
                 # Patterns indicating assistant is asking for task specification
                 asking_patterns = [

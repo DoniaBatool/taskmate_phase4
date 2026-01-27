@@ -191,6 +191,18 @@ class TestIntentDetector:
             assert intent.params.get("title") != "add task", "Must not use 'add task' as task title"
             assert intent.params.get("title") is None or intent.params.get("title").lower() != "add task"
 
+    def test_add_title_followup_delete_task_treated_as_delete_not_title(self):
+        """When assistant asked for add-task title and user says 'delete task', must be delete_ask not add with title 'delete task'."""
+        history = [
+            {"role": "user", "content": "add task"},
+            {"role": "assistant", "content": "What's the title of the task you'd like to add?"}
+        ]
+        intent = detect_user_intent("delete task", history)
+        assert intent is not None, "Should detect an intent"
+        assert intent.operation == "delete_ask", "Must treat as delete (which task?), not add with title 'delete task'"
+        if intent.operation == "add":
+            assert intent.params.get("title") != "delete task", "Must never use 'delete task' as task title"
+
     def test_update_task_bare_always_ask_which_task(self):
         """'update task' with no task in message must return update_ask and never assume from context."""
         # Even with history that mentions task 72, bare "update task" must ask which task

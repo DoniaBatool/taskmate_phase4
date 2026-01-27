@@ -1091,13 +1091,17 @@ async def chat(
                     if detected_intent.params:
                         title = detected_intent.params.get("title")
 
-                    # Never use command phrases as task title (e.g. user replied "add task" to "what's the title?")
-                    ADD_COMMAND_PHRASES = frozenset([
+                    # Never use command phrases as task title (e.g. "add task" or "delete task" as reply to "what's the title?")
+                    COMMAND_PHRASES_AS_TITLE = frozenset([
                         'add task', 'create task', 'new task',
                         'add a task', 'create a task', 'new a task',
-                        'add new task', 'create new task'
+                        'add new task', 'create new task',
+                        'delete task', 'delete the task', 'remove task', 'remove the task',
+                        'update task', 'update the task',
+                        'show all tasks', 'show task list', 'list tasks', 'list my tasks',
+                        'mark complete', 'mark as complete'
                     ])
-                    if title and (title.strip().lower() in ADD_COMMAND_PHRASES):
+                    if title and (title.strip().lower() in COMMAND_PHRASES_AS_TITLE):
                         title = None
 
                     if title:
