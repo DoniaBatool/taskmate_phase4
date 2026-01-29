@@ -1491,7 +1491,7 @@ async def chat(
 
                         logger.info(
                             f"ADD intent detected - asking for task title",
-                            extra={"user_id": user_id, "message": request.message}
+                            extra={"user_id": user_id, "user_message": request.message}
                         )
 
                         return ChatResponse(
@@ -1503,7 +1503,7 @@ async def chat(
                     logger.error(
                         f"Error handling ADD intent: {e}",
                         exc_info=True,
-                        extra={"user_id": user_id, "message": request.message}
+                        extra={"user_id": user_id, "user_message": request.message}
                     )
                     raise  # Re-raise to be caught by outer exception handler
 
@@ -1760,7 +1760,8 @@ async def chat(
                                         # list_tasks tool already returns due_date as ISO string (or None)
                                         'due_date': task.get('due_date'),
                                         'completed': task['completed'],
-                                        'created_at': task['created_at'].isoformat()
+                                        # Handle both datetime and string formats for created_at
+                                        'created_at': task['created_at'].isoformat() if hasattr(task['created_at'], 'isoformat') else task['created_at']
                                     }
                                     for task in result.tasks
                                 ],

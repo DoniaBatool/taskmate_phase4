@@ -1404,11 +1404,35 @@ class IntentDetector:
         conversation_history: List[Dict[str, str]]
     ) -> Optional[Intent]:
         """Detect ADD intent and extract task details.
-        
+
         If user provides task title in the same message (e.g., "add task: buy milk"),
         extract title and handle deterministically to avoid AI dependency.
+
+        Supports patterns:
+        - "add task buy milk" → title: "buy milk"
+        - "add task to buy milk" → title: "buy milk" (strips leading "to")
+        - "add task: buy milk" → title: "buy milk"
+        - "add a new task buy groceries" → title: "buy groceries"
+        - "add task" → no title (will ask for title)
         """
+        # Check if this is just "add task" without any title
+        bare_add_match = re.match(
+            r'^(?:add|create|new)\s+(?:a\s+)?(?:new\s+)?task\s*[.!?]?\s*$',
+            message,
+            re.IGNORECASE
+        )
+        if bare_add_match:
+            logger.info("Detected bare ADD intent (no title) - will ask for title")
+            return Intent(
+                operation="add",
+                task_id=None,
+                task_title=None,
+                params={},
+                needs_confirmation=False
+            )
+
         # Try to extract title from same message
+        # Pattern: "add task [title]" or "add task: [title]" or "add task to [title]"
         title_match = re.search(
             r'(?:add|create|new)\s+(?:a\s+)?(?:new\s+)?task(?:\s*[:\-])?\s+(.+)$',
             message,
@@ -1416,7 +1440,20 @@ class IntentDetector:
         )
         if title_match:
             task_title = title_match.group(1).strip()
-            if task_title:
+
+            # IMPORTANT: Strip leading "to" if it's used as a preposition
+            # "add task to buy milk" → "buy milk" (not "to buy milk")
+            # But keep "to" if it's part of the title like "add task: to-do list"
+            if task_title.lower().startswith('to ') and not task_title.lower().startswith('to-'):
+                task_title = task_title[3:].strip()  # Remove "to "
+
+            # Also handle "for" as preposition
+            # "add task for buying groceries" → "buying groceries"
+            if task_title.lower().startswith('for '):
+                task_title = task_title[4:].strip()  # Remove "for "
+
+            # Validate we have a real title (not just punctuation)
+            if task_title and len(task_title) >= 2:
                 logger.info(f"Detected ADD intent with title: '{task_title}'")
                 return Intent(
                     operation="add",
@@ -1425,10 +1462,10 @@ class IntentDetector:
                     params={"title": task_title},
                     needs_confirmation=False
                 )
-        
-        logger.info("Detected ADD intent (no details)")
-        
-        # Return intent with operation "add"
+
+        logger.info("Detected ADD intent (no valid title) - will ask for title")
+
+        # Return intent with operation "add" but no title
         # chat.py will handle asking for title, priority, etc.
         return Intent(
             operation="add",
