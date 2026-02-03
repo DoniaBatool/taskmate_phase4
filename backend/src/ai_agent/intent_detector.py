@@ -671,8 +671,8 @@ class IntentDetector:
                                         if re.search(r'remove\s+(?:the\s+)?(?:deadline|due\s+date|due_date)|no\s+(?:deadline|due\s+date)|cancel\s+(?:deadline|due\s+date)', prev_content):
                                             params['due_date'] = None
                                         elif any(k in prev_content for k in self.DATE_KEYWORDS) or 'due date' in prev_content or 'deadline' in prev_content:
-                                            # very simple extraction after "due date" / "deadline"
-                                            dm = re.search(r'(?:due\s+date|deadline)\s*(?:to|is|as|:)?\s*(.+?)(?:,|$)', prev_content)
+                                            # Extract due date - DON'T use comma as terminator (dates contain commas like "Feb 6, 2026")
+                                            dm = re.search(r'(?:due\s+date|deadline)\s*(?:to|is|as|:)?\s*(.+?)(?:\s+and\s+|\s+description|\s+title|\s+priority|\s+mark|$)', prev_content)
                                             if dm:
                                                 params['due_date'] = dm.group(1).strip()
                                             elif 'tomorrow' in prev_content:
