@@ -109,7 +109,13 @@ class TaskResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        # Serialize datetime with timezone info (Z suffix) so frontend can parse correctly
+        "json_encoders": {
+            datetime: lambda v: v.isoformat() + "Z" if v else None
+        }
+    }
 
 
 class HealthResponse(BaseModel):
