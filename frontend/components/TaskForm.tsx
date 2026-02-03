@@ -57,12 +57,13 @@ export function TaskForm({ onSubmit, initialTask = null, loading = false }: Prop
     setError(null);
 
     // Convert due_date to ISO format preserving local timezone
-    // datetime-local input gives us local time, we need to preserve it
+    // datetime-local input gives us local time - we send it as-is (not UTC)
+    // Backend stores times as local/naive datetime, not UTC
     let dueDateISO: string | undefined = undefined;
     if (dueDate) {
-      // datetime-local parses as local time. Converting to ISO (UTC) is correct for storage.
-      // IMPORTANT: Do NOT manually apply timezoneOffset here (it double-shifts time).
-      dueDateISO = new Date(dueDate).toISOString();
+      // Send the datetime-local value directly as ISO format (local time, no "Z" suffix)
+      // This matches how AI chat parses natural language times ("4 PM" = 4 PM user's intent)
+      dueDateISO = dueDate + ':00';  // Add seconds for full ISO format
     }
 
     await onSubmit({

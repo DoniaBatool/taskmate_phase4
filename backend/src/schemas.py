@@ -111,9 +111,10 @@ class TaskResponse(BaseModel):
 
     model_config = {
         "from_attributes": True,
-        # Serialize datetime with timezone info (Z suffix) so frontend can parse correctly
+        # Serialize datetime WITHOUT "Z" suffix - times are stored as local time, not UTC
+        # This allows frontend to interpret them correctly without timezone conversion
         "json_encoders": {
-            datetime: lambda v: v.isoformat() + "Z" if v else None
+            datetime: lambda v: v.isoformat() if v else None
         }
     }
 
