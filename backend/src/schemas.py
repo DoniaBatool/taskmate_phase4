@@ -119,8 +119,14 @@ class TaskResponse(BaseModel):
     }
 
 
+class SimpleHealthResponse(BaseModel):
+    """Simple response schema for liveness probe."""
+
+    status: str = Field(description="Service status")
+
+
 class HealthResponse(BaseModel):
-    """Response schema for health check endpoint."""
+    """Response schema for readiness check endpoint."""
 
     status: str = Field(description="Overall system status")
     database: str = Field(description="Database connection status")

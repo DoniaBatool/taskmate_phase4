@@ -188,6 +188,149 @@ kubectl exec -it pod/todo-api-xxx -- /bin/bash
 
 ---
 
+## Docker Containerization (Phase 4 Learnings)
+
+### Backend Dockerfile (FastAPI/Python)
+
+```dockerfile
+# Multi-stage build for Python/FastAPI
+FROM python:3.13-slim AS builder
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends curl build-essential && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir uv
+COPY pyproject.toml requirements.txt ./
+RUN uv pip install --system --no-cache -r requirements.txt
+
+FROM python:3.13-slim
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+RUN useradd -m -u 1000 -s /bin/bash appuser
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --chown=appuser:appuser . .
+USER appuser
+EXPOSE 8000
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD curl -f http://localhost:8000/health || exit 1
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### Frontend Dockerfile (Next.js/Node)
+
+```dockerfile
+# Multi-stage build for Next.js
+FROM node:20-alpine AS deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+RUN npm run build
+
+FROM node:20-alpine
+WORKDIR /app
+RUN addgroup -g 1001 -S nodejs && adduser -S -u 1000 -G nodejs appuser
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME="0.0.0.0"
+COPY --from=builder --chown=appuser:nodejs /app/public ./public
+COPY --from=builder --chown=appuser:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=appuser:nodejs /app/.next/static ./.next/static
+USER appuser
+EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD wget -q --spider http://localhost:3000/api/health || exit 1
+CMD ["node", "server.js"]
+```
+
+### Health Endpoint Patterns
+
+**Liveness Probe (Backend):**
+```python
+@router.get("/health")
+async def health_check():
+    """Liveness probe - is the service running?"""
+    return {"status": "healthy"}
+```
+
+**Readiness Probe (Backend):**
+```python
+@router.get("/ready")
+async def readiness_check(session: Session = Depends(get_session)):
+    """Readiness probe - is the service ready?"""
+    try:
+        session.exec(text("SELECT 1"))
+        return {"status": "ready"}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Database not ready: {str(e)}")
+```
+
+**Frontend Health Endpoint (Next.js App Router):**
+```typescript
+// app/api/health/route.ts
+import { NextResponse } from 'next/server'
+export async function GET() {
+  return NextResponse.json({ status: 'healthy' })
+}
+```
+
+### Next.js Standalone Output
+
+**Required for Docker:**
+```javascript
+// next.config.mjs
+const nextConfig = {
+  output: 'standalone',  // Required for Docker
+  // ... other config
+}
+```
+
+### Docker Compose
+
+```yaml
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+```
+
+### Containerization Checklist
+
+- [ ] Multi-stage build (builder → production)
+- [ ] Non-root user (UID 1000)
+- [ ] HEALTHCHECK instruction
+- [ ] .dockerignore file (exclude node_modules, __pycache__, .git, .env)
+- [ ] Image size < 500MB
+- [ ] Expose correct ports
+- [ ] Environment variables for secrets (not hardcoded)
+- [ ] Liveness probe (/health - simple, no DB)
+- [ ] Readiness probe (/ready - checks DB)
+
+---
+
 **Status:** Active
 **Priority:** 🔴 High (Production deployment)
-**Version:** 1.0.0
+**Version:** 1.1.0 (Phase 4 Learnings Added)

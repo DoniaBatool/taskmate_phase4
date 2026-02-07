@@ -1,5 +1,76 @@
-# Todo Hackathon Phase II Constitution      
-<!-- Full-Stack Web Application with Persistent Storage -->
+<!--
+  ==========================================================================
+  SYNC IMPACT REPORT
+  ==========================================================================
+  Version Change: 6.1.0 → 6.2.0 (MINOR)
+  Ratification Date: 2025-12-09
+  Last Amended: 2026-02-06
+
+  CHANGES IN THIS VERSION (6.2.0):
+
+  Added/Modified Sections:
+    - Skill Heading Display - MANDATORY before using any skill
+    - Visual box format for skill start (╔══ USING SKILL ══╗)
+    - Visual box format for skill complete (┌── SKILL COMPLETE ──┐)
+    - Updated workflow diagram with visual skill headers
+    - Added violation rule: "If skill NOT shown before use = VIOLATION"
+
+  Key Changes:
+    - Every skill usage MUST show visible heading BEFORE execution
+    - User can see which skill is being used at all times
+    - Clear visual distinction between skill start and completion
+
+  Previous Changes (6.1.0):
+    - AUTO SKILL LEARNING - MANDATORY (NON-NEGOTIABLE)
+    - `/sp.skill-learner` is now AUTO-TRIGGERED (not manual)
+    - Feature is NOT complete until skill-learner runs
+    - All learnings MUST be captured and added to relevant skills
+
+  Previous Changes (6.0.0):
+    - Title: "Todo Hackathon Phase II" → "Todo Hackathon Phase IV"
+    - Scope: Phase IV deployment-only scope (NO feature changes)
+    - Principle VII: Container-First Deployment
+    - Principle VIII: AIOps-Enabled Kubernetes Operations
+    - Principle IX: Helm-Based Package Management
+    - Phase IV Technology Stack, Requirements, Acceptance Criteria
+
+  Templates Requiring Updates:
+    ✅ plan-template.md - No changes needed (generic)
+    ✅ spec-template.md - No changes needed (generic)
+    ✅ tasks-template.md - No changes needed (generic)
+
+  Follow-up TODOs:
+    - None
+  ==========================================================================
+-->
+
+# Todo Hackathon Phase IV Constitution
+<!-- Local Kubernetes Deployment - Infrastructure Only -->
+
+## ⚠️ CRITICAL SCOPE STATEMENT - PHASE IV
+
+**Phase IV is DEPLOYMENT ONLY. NO changes to existing application features or business logic.**
+
+### What Phase IV DOES:
+- ✅ Containerize existing frontend and backend (Dockerfiles)
+- ✅ Deploy to local Kubernetes (Minikube)
+- ✅ Create Helm charts for package management
+- ✅ Use AIOps tools (kubectl-ai, Kagent, Gordon) for deployment
+- ✅ Configure health checks and probes
+- ✅ Manage secrets via Kubernetes Secrets
+
+### What Phase IV DOES NOT DO:
+- ❌ NO changes to API endpoints or routes
+- ❌ NO changes to database models or schema
+- ❌ NO changes to MCP tools or AI agent behavior
+- ❌ NO changes to frontend components or UI
+- ❌ NO changes to authentication or business logic
+- ❌ NO new features (that's Phase V with advanced features)
+- ❌ NO cloud deployment (that's Phase V with DigitalOcean/GKE/AKS)
+
+**The existing Phase III application MUST work exactly the same after containerization and K8s deployment. This is infrastructure work only.**
+
+---
 
 ## Core Principles
 
@@ -12,6 +83,7 @@
 - Claude Code must reference specifications during implementation
 - Specs must be updated if requirements change
 - Monorepo structure with layered CLAUDE.md files
+- **Phase IV Addition**: K8s deployment specs in `/specs/kubernetes/`
 
 ### II. Full-Stack Code Quality Standards
 **Code quality is mandatory across the stack:**
@@ -38,6 +110,7 @@
 - Proper database migrations and schema management
 - Connection pooling and efficient queries
 - No hardcoded connection strings (use environment variables)
+- **Phase IV**: Database remains external to K8s cluster (Neon Serverless)
 
 ### IV. RESTful API Architecture
 **Backend API standards:**
@@ -58,22 +131,67 @@
 - Task ownership enforcement (users only access their data)
 - Token expiry and refresh mechanism
 - No exposed secrets in code (use .env files)
+- **Phase IV**: Secrets managed via Kubernetes Secrets
 
-### VI. Core Feature Completeness
-**All 5 Basic Level features are mandatory as web application:**
-1. **Add Task**: Create new todo via REST API with title and description
-2. **Delete Task**: Remove task by ID via REST API
-3. **Update Task**: Modify existing task details via REST API
-4. **View Task List**: Display all tasks via REST API with filtering
-5. **Mark as Complete**: Toggle completion status via REST API
+### VI. AI Chatbot Architecture (Phase III - PROTECTED)
+**Stateless AI-powered chatbot - NO CHANGES ALLOWED IN PHASE IV:**
+- OpenAI Agents SDK for AI logic
+- MCP (Model Context Protocol) tools for task operations
+- Stateless chat endpoint with database-persisted conversation state
+- Conversation/Message models in database
+- Agent uses MCP tools to manage tasks
+- Natural language task management
+- All MCP tools: add_task, list_tasks, complete_task, update_task, delete_task
 
-Each feature must work end-to-end: Frontend UI → API → Database
+**⚠️ Phase IV MUST NOT modify any AI chatbot behavior or MCP tools.**
+
+### VII. Container-First Deployment (NEW - Phase IV)
+**All services MUST be containerized for deployment (infrastructure only):**
+- Frontend and backend must have production-ready Dockerfiles
+- Multi-stage builds for optimized image sizes
+- Docker Compose for local multi-container development
+- Container images must be scannable (no vulnerabilities P1/P2)
+- Use Docker AI Agent (Gordon) for intelligent Docker operations when available
+- Images tagged with git commit SHA for traceability
+
+**Docker Requirements:**
+- Base images: `python:3.13-slim` for backend, `node:20-alpine` for frontend
+- Non-root users in production containers
+- `.dockerignore` files to exclude unnecessary files
+- Health check endpoints exposed
+- NO application code changes - just packaging
+
+### VIII. AIOps-Enabled Kubernetes Operations (NEW - Phase IV)
+**AI-assisted Kubernetes operations are MANDATORY:**
+- Use `kubectl-ai` for generating K8s manifests
+- Use `Kagent` for cluster analysis and optimization
+- Use Docker AI Agent (Gordon) for Docker operations (if available)
+- AI-generated manifests must be reviewed before applying
+- All AIOps interactions documented in PHR
+
+**AIOps Tools:**
+| Tool | Purpose | Usage |
+|------|---------|-------|
+| `kubectl-ai` | Generate K8s manifests, troubleshoot pods | `kubectl-ai "deploy frontend with 2 replicas"` |
+| `Kagent` | Cluster analysis, resource optimization | `kagent "analyze cluster health"` |
+| `Docker AI (Gordon)` | Docker operations (if available) | `docker ai "build optimized image"` |
+
+### IX. Helm-Based Package Management (NEW - Phase IV)
+**Helm charts for deployment management:**
+- Helm charts must be created for all services
+- Charts must support minikube environment
+- Values files for environment-specific configuration
+- Chart versioning aligned with application versions
+- Use `kubectl-ai` or `Kagent` to generate initial charts
+
+---
 
 ## Technology Stack Requirements
 
-### Mandatory Technologies
+### Existing Technologies (Phase I-III - NO CHANGES)
+
 **Frontend:**
-- **Framework**: Next.js 16+ (App Router)
+- **Framework**: Next.js 14+ (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Authentication**: Better Auth with JWT
@@ -83,316 +201,335 @@ Each feature must work end-to-end: Frontend UI → API → Database
 - **Language**: Python 3.13+
 - **ORM**: SQLModel
 - **Package Manager**: UV
+- **AI Framework**: OpenAI Agents SDK
+- **MCP**: Official MCP SDK
 
 **Database:**
-- **Service**: Neon Serverless PostgreSQL
-- **Schema Management**: SQLModel migrations
+- **Service**: Neon Serverless PostgreSQL (EXTERNAL - not in K8s)
+- **Schema Management**: SQLModel/Alembic migrations
 
-**Development:**
-- **AI Tool**: Claude Code with Spec-Kit Plus
-- **Version Control**: Git with meaningful commit messages
-- **Monorepo**: Single repository for frontend and backend
+### Phase IV Technologies (NEW - Deployment Only)
 
-### Monorepo Project Structure
+**Containerization:**
+- **Container Runtime**: Docker (Docker Desktop)
+- **Docker AI**: Docker AI Agent (Gordon) - if available
+- **Compose**: Docker Compose for local development
+
+**Orchestration:**
+- **Local K8s**: Minikube
+- **Package Manager**: Helm Charts
+- **AI DevOps**: kubectl-ai, Kagent
+
+---
+
+## Phase IV Project Structure Additions
+
 ```
 /
-├── .specify/
-│   ├── memory/
-│   │   └── constitution.md
-│   ├── templates/
-│   └── scripts/
-├── specs/
-│   ├── overview.md
-│   ├── architecture.md
-│   ├── features/
-│   │   ├── task-crud.md
-│   │   └── authentication.md
-│   ├── api/
-│   │   └── rest-endpoints.md
-│   ├── database/
-│   │   └── schema.md
-│   └── ui/
-│       ├── components.md
-│       └── pages.md
-├── history/
-│   ├── prompts/
-│   └── adr/
-├── frontend/
-│   ├── CLAUDE.md
-│   ├── app/
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   └── tasks/
-│   ├── components/
-│   ├── lib/
-│   │   └── api.ts
-│   ├── package.json
-│   └── next.config.js
-├── backend/
-│   ├── CLAUDE.md
-│   ├── main.py
-│   ├── models.py
-│   ├── routes/
-│   │   └── tasks.py
-│   ├── db.py
-│   ├── auth.py
-│   ├── pyproject.toml
-│   └── tests/
-├── docker-compose.yml
-├── CLAUDE.md (root)
-└── README.md
+├── [EXISTING - NO CHANGES]
+│   ├── frontend/           # Existing Next.js app
+│   ├── backend/            # Existing FastAPI app
+│   ├── specs/              # Existing specifications
+│   └── ...
+│
+├── [NEW - Phase IV Additions]
+│   ├── frontend/
+│   │   ├── Dockerfile        # NEW: Production Dockerfile
+│   │   └── .dockerignore     # NEW: Docker ignore file
+│   ├── backend/
+│   │   ├── Dockerfile        # NEW: Production Dockerfile
+│   │   └── .dockerignore     # NEW: Docker ignore file
+│   ├── docker/               # NEW: Docker configurations
+│   │   ├── docker-compose.yml
+│   │   ├── docker-compose.dev.yml
+│   │   └── docker-compose.prod.yml
+│   ├── helm/                 # NEW: Helm charts
+│   │   └── todo-app/
+│   │       ├── Chart.yaml
+│   │       ├── values.yaml
+│   │       ├── values-minikube.yaml
+│   │       └── templates/
+│   │           ├── _helpers.tpl
+│   │           ├── frontend-deployment.yaml
+│   │           ├── frontend-service.yaml
+│   │           ├── backend-deployment.yaml
+│   │           ├── backend-service.yaml
+│   │           ├── ingress.yaml
+│   │           ├── configmap.yaml
+│   │           └── secret.yaml
+│   ├── k8s/                  # NEW: Raw K8s manifests (optional)
+│   │   ├── namespace.yaml
+│   │   └── ...
+│   ├── scripts/              # NEW: Deployment scripts
+│   │   ├── minikube-setup.sh
+│   │   ├── deploy-local.sh
+│   │   └── helm-deploy.sh
+│   └── specs/kubernetes/     # NEW: K8s deployment specs
+│       └── local-deployment.md
 ```
 
-### Code Organization
-**Backend Separation:**
-- `models.py` - SQLModel database models (User, Task)
-- `routes/` - API endpoint handlers
-- `db.py` - Database connection and session management
-- `auth.py` - JWT verification middleware
-- `main.py` - FastAPI application entry point
+---
 
-**Frontend Separation:**
-- `app/` - Next.js pages and layouts
-- `components/` - Reusable React components
-- `lib/api.ts` - API client with JWT token handling
-- Server Components for static content
-- Client Components for interactivity
+## Docker Requirements
 
-## Development Workflow
+### Backend Dockerfile (Infrastructure Only)
+```dockerfile
+# Multi-stage build - NO application code changes
+FROM python:3.13-slim AS builder
+WORKDIR /app
+COPY pyproject.toml .
+RUN pip install uv && uv pip install --system .
 
-### Specification Phase
-1. Write feature specification in organized `/specs` structure:
-   - `/specs/features/` - User stories and acceptance criteria
-   - `/specs/api/` - REST endpoint specifications
-   - `/specs/database/` - Schema and model definitions
-   - `/specs/ui/` - Component and page specifications
-2. Include user stories (As a user, I want...)
-3. Define acceptance criteria (Given/When/Then)
-4. Specify API contracts (request/response formats)
-5. Get specification approved before coding
+FROM python:3.13-slim
+WORKDIR /app
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY . .
+EXPOSE 8000
+HEALTHCHECK CMD curl -f http://localhost:8000/health || exit 1
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
 
-### Implementation Phase (Full-Stack)
-1. Reference spec files with Claude Code:
-   - `@specs/features/[feature].md` for feature requirements
-   - `@specs/api/rest-endpoints.md` for API contracts
-   - `@specs/database/schema.md` for database models
-2. Implement backend first:
-   - Database models (SQLModel)
-   - API endpoints (FastAPI)
-   - Authentication middleware
-   - Write and run backend tests
-3. Implement frontend:
-   - API client configuration
-   - React components
-   - Page layouts and routing
-   - Authentication flow
-4. Test end-to-end workflow
-5. Verify all acceptance criteria met
+### Frontend Dockerfile (Infrastructure Only)
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-### Quality Gates
-**Before considering a feature complete:**
-- [ ] Specification documents exist (feature, api, database, ui)
-- [ ] Backend API implemented and tested
-- [ ] Frontend UI implemented and connected to API
-- [ ] Authentication working correctly
-- [ ] Database models created with proper relationships
-- [ ] Code follows standards (PEP 8 for Python, ESLint for TypeScript)
-- [ ] Type hints/types present in both frontend and backend
-- [ ] Environment variables properly configured
-- [ ] Manual end-to-end testing performed
-- [ ] No bugs or edge cases remaining
-- [ ] User can only access their own tasks
+FROM node:20-alpine
+WORKDIR /app
+RUN adduser -D appuser && chown -R appuser:appuser /app
+USER appuser
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+EXPOSE 3000
+HEALTHCHECK CMD wget -q --spider http://localhost:3000/api/health || exit 1
+CMD ["npm", "start"]
+```
 
-### Git Workflow
-- Meaningful commit messages: `feat: add task creation API endpoint`
-- Commit after each completed feature (backend + frontend)
-- Keep commits atomic and focused
-- Include spec files in repository
-- Separate commits for backend and frontend when appropriate
+---
+
+## Kubernetes Deployment Requirements
+
+### Minikube Setup
+```bash
+# Start Minikube with adequate resources
+minikube start --cpus=4 --memory=8192 --driver=docker
+
+# Enable required addons
+minikube addons enable ingress
+minikube addons enable metrics-server
+
+# Verify cluster health
+kubectl get nodes
+kubectl cluster-info
+```
+
+### Required K8s Resources
+
+| Resource | Frontend | Backend |
+|----------|----------|---------|
+| Deployment | ✅ Required | ✅ Required |
+| Service | ✅ ClusterIP | ✅ ClusterIP |
+| Ingress | ✅ Path: / | ✅ Path: /api |
+| ConfigMap | ✅ Env vars | ✅ Env vars |
+| Secret | ✅ Auth secrets | ✅ DB + API secrets |
+| Readiness Probe | ✅ Required | ✅ Required |
+| Liveness Probe | ✅ Required | ✅ Required |
+
+### Health Endpoints (Add to existing app - minimal change)
+
+**Backend Health Endpoint** (add to existing main.py):
+```python
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
+@app.get("/ready")
+async def readiness_check(db: Session = Depends(get_session)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {"status": "ready"}
+    except Exception:
+        raise HTTPException(status_code=503, detail="Database not ready")
+```
+
+**Frontend Health Endpoint** (add if not exists):
+```typescript
+// pages/api/health.ts
+export default function handler(req, res) {
+  res.status(200).json({ status: 'healthy' })
+}
+```
+
+---
+
+## AIOps Integration
+
+### kubectl-ai Usage Examples
+```bash
+# Generate deployment manifest
+kubectl-ai "create deployment for todo-backend with 2 replicas"
+
+# Troubleshoot failing pods
+kubectl-ai "why is my todo-backend pod failing"
+
+# Generate service manifest
+kubectl-ai "create service for todo-backend on port 8000"
+```
+
+### Kagent Usage Examples
+```bash
+# Cluster health analysis
+kagent "analyze my minikube cluster health"
+
+# Resource optimization
+kagent "check resource usage in todo-app namespace"
+```
+
+---
+
+## Development Workflow - Phase IV
+
+### Phase IV Workflow (Deployment Only)
+
+1. **Containerization Phase**
+   - Create Dockerfiles for frontend and backend
+   - Test locally with Docker Compose
+   - Verify existing functionality works in containers
+   - **NO application code changes except health endpoints**
+
+2. **Helm Chart Creation**
+   - Use kubectl-ai/Kagent to generate initial manifests
+   - Convert manifests to Helm charts
+   - Create values files for minikube
+   - Validate chart syntax with `helm lint`
+
+3. **Minikube Deployment**
+   - Start Minikube cluster
+   - Deploy using Helm
+   - Verify all pods running
+   - Test Ingress access
+   - **Verify app works exactly as before**
+
+4. **Validation**
+   - Test all existing functionality
+   - Verify AI chatbot works
+   - Verify all MCP tools work
+   - **Ensure no functionality changes**
+
+### Quality Gates - Phase IV
+
+**Before considering Phase IV complete:**
+- [ ] Frontend Dockerfile builds successfully
+- [ ] Backend Dockerfile builds successfully
+- [ ] Docker Compose works for local development
+- [ ] Health endpoints implemented (minimal addition)
+- [ ] Helm chart created with all templates
+- [ ] Minikube deployment successful
+- [ ] All pods in Running state
+- [ ] Ingress configured and accessible
+- [ ] Secrets managed via K8s Secrets
+- [ ] **ALL existing functionality works unchanged**
+- [ ] **AI chatbot works exactly as before**
+- [ ] **All MCP tools work exactly as before**
+- [ ] kubectl-ai or Kagent used for at least one operation
+- [ ] README includes Minikube setup instructions
+
+---
 
 ## Constraints & Non-Goals
 
-### In Scope for Phase II
-- Basic task management as web application (add, delete, update, view, complete)
-- Persistent storage in PostgreSQL database
-- Multi-user support with authentication
-- RESTful API architecture
-- Responsive web interface
-- Input validation and error handling
-- User isolation and data security
-- JWT-based authentication
+### In Scope for Phase IV
+- ✅ Containerization (Dockerfiles, docker-compose)
+- ✅ Local Kubernetes deployment (Minikube)
+- ✅ Helm charts for package management
+- ✅ AIOps integration (kubectl-ai, Kagent)
+- ✅ Health/readiness probes (minimal code addition)
+- ✅ Ingress configuration
+- ✅ K8s Secrets management
+- ✅ Deployment scripts
 
-### Out of Scope for Phase II
-- ❌ No advanced features yet (priorities, tags, due dates, recurring tasks)
-- ❌ No AI chatbot (Phase III)
-- ❌ No Kubernetes deployment (Phase IV-V)
-- ❌ No event-driven architecture (Phase V)
-- ❌ No real-time sync across clients
-- ❌ No file attachments or media
-- ❌ No email notifications
+### Out of Scope for Phase IV
+- ❌ **NO changes to existing API endpoints**
+- ❌ **NO changes to database models**
+- ❌ **NO changes to MCP tools**
+- ❌ **NO changes to AI agent behavior**
+- ❌ **NO changes to frontend components**
+- ❌ **NO new features**
+- ❌ No cloud deployment (Phase V)
+- ❌ No Kafka/event-driven architecture (Phase V)
+- ❌ No Dapr integration (Phase V)
+- ❌ No advanced features (Phase V)
 
-### Database Schema Constraints
+---
 
-**users table (managed by Better Auth):**
-- `id`: String (primary key, UUID)
-- `email`: String (unique, required)
-- `name`: String (optional)
-- `created_at`: Timestamp (auto-generated)
+## Phase IV Skills (Deployment-Focused)
 
-**tasks table:**
-- `id`: Integer (primary key, auto-incremented)
-- `user_id`: String (foreign key → users.id, required)
-- `title`: String (1-200 characters, required)
-- `description`: Text (max 1000 characters, optional)
-- `completed`: Boolean (default False)
-- `created_at`: Timestamp (auto-generated)
-- `updated_at`: Timestamp (auto-updated)
+### Required Skills for Phase IV
 
-**Indexes:**
-- `tasks.user_id` (for efficient filtering by user)
-- `tasks.completed` (for status filtering)
+| Skill | When to Use | Output |
+|-------|-------------|--------|
+| `/sp.container-orchestration` | K8s deployment, Helm charts | K8s manifests, Helm charts |
+| `/sp.devops-engineer` | Docker, deployment scripts | Dockerfiles, compose files |
+| `/sp.deployment-automation` | Automated deployment | deploy.sh scripts |
+| `/sp.production-checklist` | Deployment validation | Checklist report |
 
-## Error Handling Standards
+### Phase IV Skill Execution Plan
 
-### Backend API Error Handling
-**HTTP Status Codes:**
-- `200 OK` - Successful GET, PUT, PATCH
-- `201 Created` - Successful POST
-- `400 Bad Request` - Invalid input data
-- `401 Unauthorized` - Missing or invalid JWT token
-- `403 Forbidden` - User doesn't own the resource
-- `404 Not Found` - Task or user not found
-- `500 Internal Server Error` - Unexpected server errors
+**Containerization:**
+1. `/sp.devops-engineer` → Create Dockerfiles
+2. `/sp.container-orchestration` → Validate container config
+3. `/sp.production-checklist` → Check readiness
 
-**Error Response Format:**
-```json
-{
-  "detail": "Clear error message",
-  "error_code": "TASK_NOT_FOUND"
-}
+**Minikube Deployment:**
+1. `/sp.container-orchestration` → Helm chart creation
+2. `/sp.devops-engineer` → Minikube setup scripts
+3. `/sp.deployment-automation` → Deploy scripts
+
+---
+
+## Phase IV Acceptance Criteria
+
+**Phase IV is complete when:**
+
+1. ✅ **All Phase III functionality works unchanged**
+2. ✅ Frontend containerized with production Dockerfile
+3. ✅ Backend containerized with production Dockerfile
+4. ✅ Docker Compose works for local development
+5. ✅ Health endpoints implemented
+6. ✅ Helm chart created with all templates
+7. ✅ Minikube cluster running with todo-app deployed
+8. ✅ All pods in Running state
+9. ✅ Ingress configured and accessible
+10. ✅ Secrets managed via K8s Secrets
+11. ✅ AIOps tools used (kubectl-ai or Kagent)
+12. ✅ README includes Minikube setup instructions
+13. ✅ **AI chatbot works exactly as before**
+14. ✅ **All MCP tools work exactly as before**
+15. ✅ **No business logic changes**
+
+### Verification Tests
+
+```bash
+# After deployment, verify all existing functionality:
+# 1. User can sign up/login
+# 2. User can create tasks
+# 3. User can list tasks
+# 4. User can update tasks
+# 5. User can delete tasks
+# 6. User can complete tasks
+# 7. AI chatbot responds to natural language
+# 8. All MCP tools work via chat
 ```
 
-### Frontend Error Handling
-- Display user-friendly error messages (not raw API errors)
-- Show loading states during API calls
-- Handle network failures gracefully
-- Provide retry mechanisms for failed requests
-- Toast notifications for success/error feedback
-- Form validation before API submission
-
-### Input Validation
-**Backend (FastAPI Pydantic):**
-- Title: 1-200 characters, required
-- Description: max 1000 characters, optional
-- User ID: valid UUID format
-- Task ID: positive integer
-
-**Frontend (Client-side):**
-- Pre-validate forms before submission
-- Show inline validation errors
-- Disable submit button during processing
-- Clear error messages for users
-
-### Security Error Handling
-- Never expose database errors to frontend
-- Log detailed errors server-side only
-- Use try-except blocks appropriately
-- Never expose JWT secrets or connection strings
-- Rate limiting on authentication endpoints
-
-## API Endpoint Specifications
-
-### Required REST API Endpoints
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/{user_id}/tasks` | List all tasks for authenticated user |
-| POST | `/api/{user_id}/tasks` | Create a new task |
-| GET | `/api/{user_id}/tasks/{id}` | Get specific task details |
-| PUT | `/api/{user_id}/tasks/{id}` | Update a task |
-| DELETE | `/api/{user_id}/tasks/{id}` | Delete a task |
-| PATCH | `/api/{user_id}/tasks/{id}/complete` | Toggle task completion |
-
-### API Security Requirements
-- All endpoints require `Authorization: Bearer <JWT_TOKEN>` header
-- JWT token must be verified using BETTER_AUTH_SECRET
-- User ID in URL must match authenticated user ID from token
-- Return 401 if token missing or invalid
-- Return 403 if user_id doesn't match token
-
-### Request/Response Examples
-
-**POST /api/{user_id}/tasks**
-```json
-Request: {
-  "title": "Buy groceries",
-  "description": "Milk, eggs, bread"
-}
-Response (201): {
-  "id": 1,
-  "user_id": "user-uuid",
-  "title": "Buy groceries",
-  "description": "Milk, eggs, bread",
-  "completed": false,
-  "created_at": "2025-12-09T10:00:00Z",
-  "updated_at": "2025-12-09T10:00:00Z"
-}
-```
-
-## Governance
-
-### Constitution Authority
-- This constitution supersedes all other development practices
-- All Claude Code interactions must reference and follow these principles
-- Deviations require documented justification
-- Root and layered CLAUDE.md files must reference this constitution
-- Monorepo structure must be maintained
-
-### Acceptance Criteria
-**Phase II is complete when:**
-1. ✅ All 5 Basic Level features implemented as web application
-2. ✅ Backend API with all required endpoints functional
-3. ✅ Frontend Next.js application with responsive UI
-4. ✅ Better Auth authentication working (signup/signin)
-5. ✅ JWT token verification on all API endpoints
-6. ✅ User isolation enforced (users only see their tasks)
-7. ✅ Neon PostgreSQL database connected and working
-8. ✅ SQLModel models created with proper relationships
-9. ✅ All tests passing (backend and frontend)
-10. ✅ Code meets quality standards (PEP 8, ESLint)
-11. ✅ Environment variables properly configured
-12. ✅ README.md includes setup instructions for both frontend and backend
-13. ✅ CLAUDE.md files at root, frontend, and backend levels
-14. ✅ specs folder contains organized specifications (features, api, database, ui)
-15. ✅ Application deployed to Vercel (frontend) and accessible via public URL
-
-### Success Metrics
-- ✅ Frontend and backend run without errors
-- ✅ All CRUD operations functional via web interface
-- ✅ Users can signup, signin, and manage only their tasks
-- ✅ Authentication and authorization working correctly
-- ✅ Database persistence working (data survives server restart)
-- ✅ Responsive UI works on desktop and mobile
-- ✅ Clean, maintainable monorepo codebase
-- ✅ Complete documentation for both frontend and backend
-- ✅ API endpoints follow REST conventions
-- ✅ Ready for demo video (under 90 seconds)
-- ✅ Deployed and accessible online
-
-### Deployment Requirements
-**Frontend (Vercel):**
-- Environment variables: `BETTER_AUTH_SECRET`, `NEXT_PUBLIC_API_URL`
-- Build succeeds without errors
-- Public URL accessible
-
-**Backend (Python hosting or containerized):**
-- Environment variables: `DATABASE_URL`, `BETTER_AUTH_SECRET`
-- FastAPI app runs and serves API requests
-- Accessible from frontend (CORS configured)
-
-**Database (Neon):**
-- PostgreSQL database provisioned
-- Tables created via SQLModel migrations
-- Connection string secured in environment variables
+---
 
 ## Phase III+ Requirements: Reusable Intelligence Skills (MANDATORY)
 
@@ -400,1079 +537,450 @@ Response (201): {
 
 **THIS IS A NON-NEGOTIABLE REQUIREMENT FROM PROJECT TEACHERS/INSTRUCTORS**
 
-Starting from Phase III (AI Chatbot) and all subsequent phases, the use of reusable intelligence skills is **MANDATORY** for ALL feature development. This is a religious enforcement policy.
+The use of reusable intelligence skills is **MANDATORY** for ALL work. This is a religious enforcement policy.
 
 ### 🚨 ABSOLUTE REQUIREMENTS (MUST FOLLOW)
 
 #### 1. Skills Are MANDATORY, Not Optional
-- ✅ **REQUIRED**: Use existing skills for ALL feature implementation
+- ✅ **REQUIRED**: Use existing skills for ALL implementation
 - ❌ **VIOLATION**: Manual implementation when a skill exists
 - ✅ **REQUIRED**: Create new skills for missing capabilities
-- ❌ **VIOLATION**: Implementing features without skill-based approach
+- ❌ **VIOLATION**: Implementing without skill-based approach
 
-#### 2. Terminal Output Is MANDATORY
-Every skill usage MUST produce visible terminal output:
+#### 2. Terminal Output Is MANDATORY (RELIGIOUS ENFORCEMENT)
+
+**BEFORE using ANY skill, Claude MUST show this heading:**
+
 ```text
-🔧 Using Skill: /sp.skill-name
-
-Purpose: [What this skill does]
-Constitution Check: ✓ Passed
-Tasks Covered: T123-T125
-Files Generated:
-  - path/to/file1.py
-  - path/to/file2.py
-  - path/to/test.py
-
-✅ Skill Complete
+╔══════════════════════════════════════════════════════════════╗
+║  🔧 USING SKILL: /sp.skill-name                              ║
+╠══════════════════════════════════════════════════════════════╣
+║  Purpose: [What this skill does]                             ║
+║  Constitution Check: ✓ Passed                                ║
+╚══════════════════════════════════════════════════════════════╝
 ```
 
-**If you don't see this output, the skill was NOT used (VIOLATION).**
+**AFTER skill completes, show:**
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│  ✅ SKILL COMPLETE: /sp.skill-name                           │
+├──────────────────────────────────────────────────────────────┤
+│  Files Generated/Modified:                                   │
+│    - path/to/file1                                           │
+│    - path/to/file2                                           │
+│  Time: [duration]                                            │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**If skill is NOT shown before use = VIOLATION**
 
 #### 3. Skill Planning Is MANDATORY
-Before implementing ANY feature:
-1. ✅ **STEP 1**: Analyze all tasks in the feature
-2. ✅ **STEP 2**: Map each task to existing skills OR identify need for new skills
-3. ✅ **STEP 3**: Display skill execution plan in terminal
+Before implementing ANY work:
+1. ✅ **STEP 1**: Analyze tasks
+2. ✅ **STEP 2**: Map to existing skills
+3. ✅ **STEP 3**: Display skill execution plan
 4. ✅ **STEP 4**: Wait for user approval
-5. ✅ **STEP 5**: Execute using identified skills (invoke via Skill tool)
-6. ✅ **STEP 6**: Report skill usage in PHR and commit message
+5. ✅ **STEP 5**: Execute using skills
+6. ✅ **STEP 6**: Report usage in PHR
 
-**Example Terminal Output:**
-```text
-🔧 Phase 8: Performance Optimization
+---
 
-Skills Plan:
-1. /sp.connection-pooling → Verify pool configuration (T163-T164)
-2. /sp.skill-creator → Create /sp.performance-logger (T165-T166)
-3. /sp.performance-logger → Add execution time logging
-4. /sp.ab-testing → Run load tests (T167-T169)
-
-Waiting for approval... ✋
-```
-
-#### 4. Skill Creation Is MANDATORY When Needed
-If no skill exists for required capability:
-1. ✅ Use `/sp.skill-creator` to create new skill FIRST
-2. ✅ Document new skill in `SKILLS.md`
-3. ✅ THEN use the newly created skill
-4. ❌ NEVER implement manually if capability can be a skill
-
-### 📋 Complete Skills Reference (42 Available Skills - EXPANDED!)
+### 📋 Skills Reference (44+ Available)
 
 **Location**: All skills are in `.claude/skills/` directory
-**Usage**: Invoke via `Skill` tool with skill name (e.g., `/sp.mcp-tool-builder`)
-**Requirement**: MUST be used for ALL applicable work in Phase III+
-**Total Categories**: 8 (added Modern Architecture category)
-**Feature-Specific Skills**: See `.claude/skills/robust-ai-assistant/SKILL.md` for AI chatbot natural language workflows
+
+#### Phase IV Priority Skills
+
+| Skill | When to Use | Output |
+|-------|-------------|--------|
+| `/sp.container-orchestration` | K8s deployment, Helm | K8s manifests, Helm charts |
+| `/sp.devops-engineer` | Docker, deployment | Dockerfiles, scripts |
+| `/sp.deployment-automation` | Automated deployment | deploy.sh scripts |
+| `/sp.production-checklist` | Deployment validation | Checklist report |
+
+#### Other Available Skills (Full List)
+
+**Workflow & Planning (6):**
+- `/sp.specify`, `/sp.plan`, `/sp.tasks`, `/sp.implement`, `/sp.new-feature`, `/sp.skill-learner`
+
+**Core Implementation (6):**
+- `/sp.mcp-tool-builder`, `/sp.ai-agent-setup`, `/sp.chatbot-endpoint`, `/sp.conversation-manager`, `/sp.database-schema-expander`, `/sp.robust-ai-assistant`
+
+**Foundation (6):**
+- `/sp.jwt-authentication`, `/sp.user-isolation`, `/sp.password-security`, `/sp.pydantic-validation`, `/sp.connection-pooling`, `/sp.transaction-management`
+
+**Role-Based (7):**
+- `/sp.backend-developer`, `/sp.frontend-developer`, `/sp.fullstack-architect`, `/sp.database-engineer`, `/sp.devops-engineer`, `/sp.security-engineer`, `/sp.uiux-designer`
+
+**Quality & Testing (3):**
+- `/sp.edge-case-tester`, `/sp.ab-testing`, `/sp.qa-engineer`
+
+**Production & Deployment (5):**
+- `/sp.performance-logger`, `/sp.structured-logging`, `/sp.deployment-automation`, `/sp.production-checklist`, `/sp.vercel-deployer`
+
+**Modern Architecture (10):**
+- `/sp.caching-strategy`, `/sp.api-contract-design`, `/sp.message-queue-integration`, `/sp.observability-apm`, `/sp.microservices-patterns`, `/sp.infrastructure-as-code`, `/sp.feature-flags-management`, `/sp.websocket-realtime`, `/sp.graphql-api`, `/sp.container-orchestration`
 
 ---
 
-#### 0️⃣ Automation & Orchestration (1 skill - NEW!)
+## 🧠 AUTO SKILL LEARNING - MANDATORY (NON-NEGOTIABLE)
 
-| Skill | When to Use | Auto-Trigger | Output |
-|-------|-------------|--------------|--------|
-| `/sp.prompt-analyzer` | Analyzing user prompts to detect skills/agents | **EVERY user request** | Skills mapping, agent assignment, execution plan |
+### ⚠️ CRITICAL: Feature is NOT Complete Until Skill-Learner Runs
 
-**Purpose**: Automatically analyzes prompts and determines which skills and agents should be used, eliminating manual selection.
+**This is RELIGIOUS enforcement. A feature is INCOMPLETE without skill learning.**
 
----
+### Auto-Trigger Condition
 
-#### 1️⃣ Workflow & Planning Skills (5 skills)
+`/sp.skill-learner` MUST be **AUTOMATICALLY** called when:
+1. ✅ Feature implementation is complete
+2. ✅ User has tested the feature and is satisfied
+3. ✅ System tests have passed
 
-| Skill | When to Use | Auto-Trigger | Output |
-|-------|-------------|--------------|--------|
-| `/sp.specify` | Creating feature specifications | When user requests new feature | `specs/{feature}/spec.md` |
-| `/sp.plan` | Generating implementation plans | After spec created | `specs/{feature}/plan.md` |
-| `/sp.tasks` | Breaking down into tasks | After plan created | `specs/{feature}/tasks.md` |
-| `/sp.implement` | Executing implementation | After tasks created | Code files, tests |
-| `/sp.new-feature` | Complete spec→plan→tasks flow | User requests "new feature from scratch" | All three files in one workflow |
+**The system (Claude) MUST auto-invoke skill-learner without user asking for it.**
 
-**When user says**: "Create a new feature for X" → Use `/sp.new-feature`
-**When user says**: "Plan how to implement X" → Use `/sp.plan`
-
----
-
-#### 2️⃣ Core Implementation Skills - Phase III (6 skills)
-
-| Skill | When to Use | Tasks Covered | Constitution Principle |
-|-------|-------------|---------------|----------------------|
-| `/sp.mcp-tool-builder` | Creating MCP tools for AI agent | Task CRUD operations (add, list, update, delete, complete) | Principle VI (MCP-First Design) |
-| `/sp.ai-agent-setup` | Configuring OpenAI Agents SDK | AI agent initialization, tool binding | Principle II (Stateless Architecture) |
-| `/sp.chatbot-endpoint` | Creating stateless chat API | Chat endpoint with JWT validation | Principle II (Stateless), Principle V (Security) |
-| `/sp.conversation-manager` | Managing conversation state | Conversation/Message models, history | Principle III (Database-Centric State) |
-| `/sp.database-schema-expander` | Adding new database tables | New SQLModel models, migrations, indexes | Principle III (Database-Centric State) |
-| `/sp.robust-ai-assistant` | Natural language task management | Multi-turn workflows, intent recognition, date parsing, fuzzy matching | Principle II, III, VI (Stateless, DB-Centric, MCP) |
-
-**When user says**: "Add chat functionality" → Use `/sp.ai-agent-setup` + `/sp.chatbot-endpoint` + `/sp.conversation-manager`
-**When user says**: "Create add_task tool" → Use `/sp.mcp-tool-builder`
-**When user says**: "Make chatbot more conversational" → Use `/sp.robust-ai-assistant`
-
----
-
-#### 3️⃣ Foundation Skills - Phase II Patterns (6 skills)
-
-| Skill | When to Use | Tasks Covered | Constitution Principle |
-|-------|-------------|---------------|----------------------|
-| `/sp.jwt-authentication` | Setting up user authentication | JWT creation/verification, protected endpoints | Principle V (Security & User Isolation) |
-| `/sp.user-isolation` | Protecting user-owned resources | Query scoping, ownership checks, security logging | Principle V (Security & User Isolation) |
-| `/sp.password-security` | Implementing signup/login | bcrypt hashing, signup/login endpoints, secure schemas | Principle V (Security & User Isolation) |
-| `/sp.pydantic-validation` | Creating API endpoints | Request/response DTOs, custom validators | Principle IV (RESTful API Architecture) |
-| `/sp.connection-pooling` | Setting up database connections | Engine config, pool settings, health monitoring | Principle VII (Database Performance) |
-| `/sp.transaction-management` | Implementing database writes | Try/commit/rollback, multi-step atomicity | Principle III (Database-Centric State) |
-
-**When user says**: "Add authentication" → Use `/sp.jwt-authentication` + `/sp.password-security`
-**When user says**: "Protect user data" → Use `/sp.user-isolation`
-
----
-
-#### 4️⃣ Role-Based Development Skills (7 skills)
-
-| Skill | When to Use | Capabilities | Best For |
-|-------|-------------|--------------|----------|
-| `/sp.backend-developer` | Backend API implementation | FastAPI endpoints, SQLModel, business logic | REST API, database operations |
-| `/sp.frontend-developer` | Frontend UI implementation | Next.js, React components, API client | UI/UX, user interfaces |
-| `/sp.fullstack-architect` | System design & architecture | End-to-end architecture, integration | Complex multi-layer features |
-| `/sp.database-engineer` | Database optimization | Schema design, indexes, migrations, queries | Database performance, data modeling |
-| `/sp.devops-engineer` | Infrastructure & deployment | Docker, CI/CD, environment setup | Deployment, infrastructure |
-| `/sp.security-engineer` | Security hardening | OWASP audit, vulnerability scanning, security tests | Security compliance, penetration testing |
-| `/sp.uiux-designer` | User experience design | Wireframes, user flows, component design | Design-first features |
-
-**When user says**: "Implement backend API" → Use `/sp.backend-developer`
-**When user says**: "Create UI for X" → Use `/sp.frontend-developer`
-**When user says**: "Run security audit" → Use `/sp.security-engineer`
-
----
-
-#### 5️⃣ Quality & Testing Skills (3 skills)
-
-| Skill | When to Use | Test Coverage | Auto-Trigger |
-|-------|-------------|---------------|--------------|
-| `/sp.edge-case-tester` | After any feature implementation | 57+ edge case scenarios | ✅ Automatically after `/sp.implement` |
-| `/sp.ab-testing` | Validating feature variations | A/B test framework, variant configs, analytics | Manual - for experiments |
-| `/sp.qa-engineer` | Creating comprehensive test suites | Unit tests, integration tests, smoke tests, E2E | When implementing critical features |
-
-**When user says**: "Test this feature" → Use `/sp.edge-case-tester` + `/sp.qa-engineer`
-**When user says**: "Run A/B test" → Use `/sp.ab-testing`
-
----
-
-#### 6️⃣ Production & Deployment Skills (5 skills)
-
-| Skill | When to Use | Tasks Covered | Output |
-|-------|-------------|---------------|--------|
-| `/sp.performance-logger` | Adding performance monitoring | Execution time logging, structured metrics | `utils/performance.py`, decorators |
-| `/sp.structured-logging` | Setting up production logging | JSON logging, log aggregation compatibility | `logging_config.py`, error context |
-| `/sp.deployment-automation` | Creating deployment workflows | Deploy scripts, validation, health checks | `scripts/deploy.sh`, CI/CD configs |
-| `/sp.production-checklist` | Validating production readiness | Security, performance, monitoring checklists | Production readiness report |
-| `/sp.vercel-deployer` | Deploying to Vercel | Frontend deployment, environment config | Vercel deployment configs |
-
-**When user says**: "Add performance logging" → Use `/sp.performance-logger`
-**When user says**: "Prepare for production" → Use `/sp.production-checklist`
-**When user says**: "Deploy to Vercel" → Use `/sp.vercel-deployer`
-
----
-
-#### 7️⃣ Specialized Utility Skills (5 skills)
-
-| Skill | When to Use | Purpose | Output |
-|-------|-------------|---------|--------|
-| `/sp.api-docs-generator` | Generating API documentation | OpenAPI/Swagger docs, deployment guides | API docs, CHANGELOG.md |
-| `/sp.change-management` | Modifying existing features | Impact analysis, safe changes, rollback plan | Change spec, updated files |
-| `/sp.skill-creator` | Creating new reusable skills | When new capability needed | New skill in `.claude/skills/` |
-| `/sp.github-specialist` | GitHub operations | Issues, PRs, releases, GitHub Actions | GitHub configs, workflows |
-| `/sp.conversation-manager` | Managing chat state | Conversation/Message models | Database models, services |
-
-**When user says**: "Document the API" → Use `/sp.api-docs-generator`
-**When user says**: "Modify existing feature X" → Use `/sp.change-management`
-**When user says**: "Create new skill for Y" → Use `/sp.skill-creator`
-
----
-
-#### 8️⃣ 🆕 Modern Architecture Skills (10 skills - NEW!)
-
-| Skill | When to Use | Purpose | Output |
-|-------|-------------|---------|--------|
-| `/sp.caching-strategy` | Performance optimization with Redis/Memcached | API caching, session storage, rate limiting | Cache layer implementation, 10x performance boost |
-| `/sp.api-contract-design` | Contract-first API development | OpenAPI specifications, API versioning | OpenAPI specs, contract validation |
-| `/sp.message-queue-integration` | Async processing with RabbitMQ/Kafka | Background jobs, event-driven architecture | Queue setup, consumer/producer code |
-| `/sp.observability-apm` | Production monitoring and tracing | APM, distributed tracing, metrics | OpenTelemetry setup, Grafana dashboards |
-| `/sp.microservices-patterns` | Resilient microservices | Circuit breaker, saga, service mesh | Resilient communication patterns |
-| `/sp.infrastructure-as-code` | Infrastructure provisioning | Terraform, CloudFormation, Pulumi | IaC scripts, reproducible infrastructure |
-| `/sp.feature-flags-management` | Feature toggles and gradual rollouts | A/B testing, canary releases, kill switches | Feature flag service, toggle configs |
-| `/sp.websocket-realtime` | Real-time bidirectional communication | Chat, live dashboards, notifications | WebSocket server, real-time features |
-| `/sp.graphql-api` | Flexible API alternative to REST | Client-specified queries, subscriptions | GraphQL schema, resolvers |
-| `/sp.container-orchestration` | Kubernetes deployment | Production container management, auto-scaling | K8s manifests, Helm charts |
-
-**When user says**: "Add caching for performance" → Use `/sp.caching-strategy`
-**When user says**: "Design API contract" → Use `/sp.api-contract-design`
-**When user says**: "Add real-time chat" → Use `/sp.websocket-realtime`
-**When user says**: "Deploy to Kubernetes" → Use `/sp.container-orchestration`
-**When user says**: "Add message queue" → Use `/sp.message-queue-integration`
-
-**Enterprise Capabilities Unlocked:**
-- ✅ Cloud-native architecture
-- ✅ Microservices patterns
-- ✅ Real-time features
-- ✅ Production observability
-- ✅ Modern deployment strategies
-- ✅ Event-driven systems
-
----
-
-### 🎯 Feature → Skills Mapping (Common Scenarios)
-
-#### Scenario 1: "Create AI chatbot for task management"
-**Required Skills** (Sequential):
-1. `/sp.database-schema-expander` → Conversation & Message tables
-2. `/sp.mcp-tool-builder` (5x) → add_task, list_tasks, complete_task, update_task, delete_task
-3. `/sp.ai-agent-setup` → OpenAI Agents SDK configuration
-4. `/sp.chatbot-endpoint` → Stateless chat API
-5. `/sp.conversation-manager` → Conversation state management
-6. `/sp.robust-ai-assistant` → Natural language workflows, intent recognition, date parsing
-7. `/sp.edge-case-tester` → Comprehensive testing (auto-trigger)
-
-#### Scenario 2: "Add user authentication"
-**Required Skills** (Sequential):
-1. `/sp.database-schema-expander` → Users table (if needed)
-2. `/sp.jwt-authentication` → JWT creation/verification
-3. `/sp.password-security` → bcrypt hashing, auth endpoints
-4. `/sp.user-isolation` → Protect all user data
-5. `/sp.pydantic-validation` → Auth request/response schemas
-6. `/sp.security-engineer` → Security audit
-
-#### Scenario 3: "Performance optimization"
-**Required Skills** (Sequential):
-1. `/sp.connection-pooling` → Verify pool configuration
-2. `/sp.performance-logger` → Add execution time logging
-3. `/sp.structured-logging` → JSON logging setup
-4. `/sp.database-engineer` → Query optimization, indexes
-5. `/sp.ab-testing` → Load testing, performance validation
-
-#### Scenario 4: "Prepare for production deployment"
-**Required Skills** (Sequential):
-1. `/sp.security-engineer` → OWASP security audit
-2. `/sp.performance-logger` → Performance monitoring
-3. `/sp.structured-logging` → Production logging
-4. `/sp.api-docs-generator` → API documentation
-5. `/sp.deployment-automation` → Deployment scripts
-6. `/sp.qa-engineer` → Smoke tests
-7. `/sp.production-checklist` → Production readiness validation
-
-#### Scenario 5: "Add new feature X from scratch"
-**Required Skills** (Sequential):
-1. `/sp.new-feature` → Creates spec.md, plan.md, tasks.md
-2. `/sp.fullstack-architect` → System design
-3. `/sp.backend-developer` → Backend implementation
-4. `/sp.frontend-developer` → Frontend implementation
-5. `/sp.edge-case-tester` → Edge case testing (auto)
-6. `/sp.qa-engineer` → Integration testing
-
----
-
-### 📊 Skills Usage Patterns
-
-#### Pattern 1: Role-Based Development
-When implementing complex features, chain role-based skills:
-```text
-/sp.fullstack-architect → Overall design
-  ↓
-/sp.backend-developer → API implementation
-  ↓
-/sp.frontend-developer → UI implementation
-  ↓
-/sp.qa-engineer → Testing
-```
-
-#### Pattern 2: Foundation First
-Always establish foundation before adding features:
-```text
-/sp.database-schema-expander → Data models
-  ↓
-/sp.connection-pooling → Database setup
-  ↓
-/sp.transaction-management → Write operations
-  ↓
-/sp.backend-developer → Business logic
-```
-
-#### Pattern 3: Security & Testing Last
-End every feature with security and testing:
-```text
-[Feature Implementation]
-  ↓
-/sp.user-isolation → Protect user data
-  ↓
-/sp.security-engineer → Security audit
-  ↓
-/sp.edge-case-tester → Edge cases (auto)
-  ↓
-/sp.qa-engineer → Comprehensive tests
-```
-
-### 🎯 Skill Usage Contract
-
-#### Quick Reference: User Request → Skills
-
-**See "Feature → Skills Mapping" section above for 5 complete scenarios.**
-
-**Common Patterns**:
-- "Create X" → `/sp.new-feature` (spec→plan→tasks)
-- "Implement X" → Role-based skills (`/sp.backend-developer`, `/sp.frontend-developer`)
-- "Add authentication" → `/sp.jwt-authentication` + `/sp.password-security` + `/sp.user-isolation`
-- "Optimize performance" → `/sp.connection-pooling` + `/sp.performance-logger` + `/sp.database-engineer`
-- "Deploy to production" → Production & Deployment skills (5 skills in sequence)
-- "Test X" → `/sp.edge-case-tester` + `/sp.qa-engineer`
-- "Modify existing feature" → `/sp.change-management`
-
-#### Automatic Skill Triggers (MANDATORY)
-- ✅ After `/sp.implement` completes → **MUST** auto-run `/sp.edge-case-tester`
-- ✅ After any database write → **SHOULD** use `/sp.transaction-management`
-- ✅ After new API endpoint → **SHOULD** use `/sp.pydantic-validation`
-- ✅ After any feature completion → **SUGGEST** `/sp.ab-testing` for validation
-- ✅ After architecture changes → **SUGGEST** `/sp.adr` (Architecture Decision Record)
-- 🧠 **After ANY feature completion → MUST auto-run `/sp.skill-learner`** (NON-NEGOTIABLE)
-
-### 🧠 MANDATORY: Skill-Learner After Every Feature (RELIGIOUS ENFORCEMENT)
-
-**This is NON-NEGOTIABLE. Feature is NOT complete until skill-learner runs.**
-
-#### Complete Feature Implementation Workflow
+### Complete Feature Implementation Workflow
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  STEP 1: SKILL PLAN (Before ANY implementation)                 │
+│  STEP 1: SKILL PLANNING (Before implementation)                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  📋 Feature: [Feature Name]                                     │
-│                                                                 │
-│  Skills Required:                                               │
-│  1. /sp.skill-name-1 → [purpose]                                │
-│  2. /sp.skill-name-2 → [purpose]                                │
-│  3. /sp.skill-name-3 → [purpose]                                │
-│                                                                 │
+│  Skills Required: [List skills to use]                          │
 │  Waiting for approval... ✋                                     │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│  STEP 2: SKILL EXECUTION (Show EACH skill being used)           │
+│  STEP 2: SKILL EXECUTION (During implementation)                │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  🔧 Using Skill: /sp.skill-name-1                               │
-│  Purpose: [what this skill does]                                │
-│  Files Generated:                                               │
-│    - path/to/file1.py                                           │
-│    - path/to/file2.py                                           │
-│  ✅ Skill Complete                                              │
+│  ╔═══════════════════════════════════════════════════════════╗  │
+│  ║  🔧 USING SKILL: /sp.devops-engineer                      ║  │
+│  ╠═══════════════════════════════════════════════════════════╣  │
+│  ║  Purpose: Create Dockerfiles for containerization         ║  │
+│  ║  Constitution Check: ✓ Passed                             ║  │
+│  ╚═══════════════════════════════════════════════════════════╝  │
 │                                                                 │
-│  🔧 Using Skill: /sp.skill-name-2                               │
-│  Purpose: [what this skill does]                                │
-│  ✅ Skill Complete                                              │
+│  [... skill execution happens here ...]                         │
+│                                                                 │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  ✅ SKILL COMPLETE: /sp.devops-engineer                   │  │
+│  ├───────────────────────────────────────────────────────────┤  │
+│  │  Files Generated:                                         │  │
+│  │    - backend/Dockerfile                                   │  │
+│  │    - frontend/Dockerfile                                  │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ╔═══════════════════════════════════════════════════════════╗  │
+│  ║  🔧 USING SKILL: /sp.container-orchestration              ║  │
+│  ╠═══════════════════════════════════════════════════════════╣  │
+│  ║  Purpose: Create Helm charts for K8s deployment           ║  │
+│  ║  Constitution Check: ✓ Passed                             ║  │
+│  ╚═══════════════════════════════════════════════════════════╝  │
+│                                                                 │
+│  [... next skill execution ...]                                 │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│  STEP 3: FEATURE IMPLEMENTATION COMPLETE                        │
+│  STEP 3: FEATURE TESTING                                        │
+├─────────────────────────────────────────────────────────────────┤
+│  🧪 Running tests...                                            │
+│  ✅ All tests passed                                            │
+│  👤 User verification: "Feature works correctly"                │
 └─────────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
-│  STEP 4: AUTO-CALL SKILL-LEARNER (MANDATORY - NOT OPTIONAL!)    │
+│  STEP 4: AUTO SKILL LEARNING (MANDATORY - AUTO-TRIGGERED)       │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  🧠 Skill Learning Session                                      │
+│  🧠 Skill Learning Session (AUTO-TRIGGERED)                     │
 │                                                                 │
 │  Feature Completed: [Feature Name]                              │
 │  Skills Used:                                                   │
-│    - /sp.skill-name-1                                           │
-│    - /sp.skill-name-2                                           │
+│    - /sp.skill-1                                                │
+│    - /sp.skill-2                                                │
+│                                                                 │
+│  Analyzing learnings...                                         │
 │                                                                 │
 │  Learnings Captured:                                            │
-│    - Bug Fix: [description] → Added to /sp.skill-name-1         │
-│    - Pattern: [description] → Added to /sp.skill-name-2         │
-│    - Edge Case: [description] → Added test to skill             │
+│    ├── Bug Fix: [description] → Added to /sp.skill-1            │
+│    ├── Pattern: [description] → Added to /sp.skill-2            │
+│    ├── Edge Case: [description] → Added test to skill           │
+│    └── Best Practice: [description] → Added checklist item      │
 │                                                                 │
 │  Skills Updated:                                                │
-│    ✅ /sp.skill-name-1 (added bug fix pattern)                  │
-│    ✅ /sp.skill-name-2 (added new pattern)                      │
+│    ✅ /sp.skill-1 (added bug fix pattern)                       │
+│    ✅ /sp.skill-2 (added new pattern)                           │
 │                                                                 │
 │  🧠 Skills Evolution Complete                                   │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
+                              ↓
+┌─────────────────────────────────────────────────────────────────┐
+│  ✅ FEATURE FULLY COMPLETE                                      │
+│  (Only after skill-learner has run)                             │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-#### What Skill-Learner Must Capture
+### What Skill-Learner MUST Capture
 
-After EVERY feature, skill-learner MUST check for:
+After EVERY feature, skill-learner MUST analyze and capture:
 
 | Category | Question | Action |
 |----------|----------|--------|
 | **Bug Fixes** | Did you fix any bugs during implementation? | Add solution pattern to relevant skill |
 | **Edge Cases** | Did you discover edge cases not in skill? | Add test case to skill |
-| **Patterns** | Did you discover a better approach? | Document in skill |
+| **Patterns** | Did you discover a better approach? | Document pattern in skill |
 | **Code Templates** | Did you write reusable code? | Add as template to skill |
 | **Corrections** | Was original skill guidance wrong? | Correct the skill |
+| **Checklists** | What steps should be remembered? | Add checklist items |
 
-#### VIOLATIONS (Will be Rejected)
+### Learning Categories Format
 
-❌ **VIOLATION 1:** Implementing feature without using skills
-```text
-User: "Add authentication"
-Claude: [Creates auth code manually without using /sp.jwt-authentication]
+**Bug Fix Template:**
+```markdown
+### Issue: [Problem Title]
+**Problem:** [What went wrong]
+**Solution:** [How to fix it]
+```python
+# ❌ FAILS
+[broken_code]
 
-❌ REJECTED - Must use skills
+# ✅ WORKS
+[fixed_code]
+```
 ```
 
-❌ **VIOLATION 2:** Not showing skill names during execution
-```text
-Claude: [Implements feature using skills but doesn't show which skills]
-
-❌ REJECTED - Must show: "🔧 Using Skill: /sp.skill-name"
+**Edge Case Template:**
+```markdown
+### Edge Case: [Scenario]
+**When:** [Condition]
+**Handle:** [How to handle]
+**Test:**
+```python
+def test_edge_case():
+    [test_code]
+```
 ```
 
-❌ **VIOLATION 3:** Not calling skill-learner after feature
+**Best Practice Template:**
+```markdown
+### Best Practice: [Title]
+**Do:** [Correct approach]
+**Don't:** [Wrong approach]
+**Checklist:** [ ] [Action item]
+```
+
+### Skill Update Targets
+
+Skills MUST be updated based on learnings:
+
+| Skill Used | Update With |
+|------------|-------------|
+| `/sp.container-orchestration` | Dockerfile patterns, K8s issues, Helm tips |
+| `/sp.devops-engineer` | Build issues, deployment fixes, script patterns |
+| `/sp.deployment-automation` | CI/CD learnings, automation patterns |
+| `/sp.mcp-tool-builder` | Tool parameter issues, error handling patterns |
+| `/sp.chatbot-endpoint` | Conversation state issues, timeout handling |
+| `/sp.robust-ai-assistant` | Date parsing, intent detection, fuzzy matching |
+
+### Auto-Trigger Rules
+
+**Claude MUST auto-invoke `/sp.skill-learner` when:**
+
+1. **User says feature is working:**
+   - "Chal gaya" / "It's working"
+   - "Test kar liya" / "Tested it"
+   - "Feature complete ho gaya"
+   - "All good" / "Sab theek hai"
+
+2. **Tests pass:**
+   - All unit tests pass
+   - Integration tests pass
+   - Manual verification successful
+
+3. **Implementation complete:**
+   - All tasks in tasks.md marked done
+   - No pending items
+
+### VIOLATIONS (Feature Marked INCOMPLETE)
+
+❌ **VIOLATION 1:** Not calling skill-learner after feature
 ```text
 Claude: "Feature complete!"
-[Does not call /sp.skill-learner]
+[Does NOT call /sp.skill-learner]
 
-❌ REJECTED - Feature NOT complete until skill-learner runs
+❌ REJECTED - Feature is NOT complete
+✅ CORRECT: Auto-invoke skill-learner after user confirms
 ```
 
-#### CORRECT Implementation Example
+❌ **VIOLATION 2:** User has to ask for skill-learner
+```text
+User: "Feature test ho gaya, skill-learner chala do"
+Claude: [Runs skill-learner]
+
+❌ PARTIAL - Should have been auto-triggered
+✅ CORRECT: Auto-invoke without user asking
+```
+
+### Correct Flow Example
 
 ```text
-User: "Add date parsing to the chatbot"
+User: "Containerization complete ho gayi, test kar liya, sab chal raha hai"
 
 Claude:
-  📋 Feature: Natural Language Date Parsing
+  ✅ Feature verified as complete
 
-  Skills Required:
-  1. /sp.robust-ai-assistant → Date parsing patterns
-  2. /sp.edge-case-tester → Test edge cases
+  🧠 Skill Learning Session (AUTO-TRIGGERED)
 
-  Waiting for approval... ✋
-
-User: "Approved"
-
-Claude:
-  🔧 Using Skill: /sp.robust-ai-assistant
-  Purpose: Implement date parsing with natural language support
-  Files Generated:
-    - backend/src/utils/date_parser.py
-    - backend/tests/test_date_parser.py
-  ✅ Skill Complete
-
-  🔧 Using Skill: /sp.edge-case-tester
-  Purpose: Test date parsing edge cases
-  Tests Added: 25 test cases
-  ✅ Skill Complete
-
-  ✅ Feature Implementation Complete
-
-  🧠 Skill Learning Session
-
-  Feature Completed: Natural Language Date Parsing
+  Feature: Phase IV Containerization
   Skills Used:
-    - /sp.robust-ai-assistant
-    - /sp.edge-case-tester
+    - /sp.devops-engineer
+    - /sp.container-orchestration
+    - /sp.deployment-automation
+
+  Analyzing learnings from implementation...
 
   Learnings Captured:
-    - Bug Fix: "Z" suffix parsing in Python <3.11 → Added to /sp.robust-ai-assistant
-    - Pattern: Time-of-day words preprocessing → Added to /sp.robust-ai-assistant
-    - Edge Case: Dates with commas (Feb 6, 2026) → Added test
+    ├── Issue: Multi-stage build COPY path was wrong
+    │   → Added to /sp.devops-engineer
+    ├── Pattern: Non-root user setup for both containers
+    │   → Added template to /sp.container-orchestration
+    ├── Edge Case: ARM64 vs AMD64 image compatibility
+    │   → Added checklist to /sp.devops-engineer
+    └── Best Practice: Use specific version tags not :latest
+        → Added to /sp.container-orchestration
 
   Skills Updated:
-    ✅ /sp.robust-ai-assistant (added Date/Time Best Practices section)
+    ✅ /sp.devops-engineer (3 additions)
+    ✅ /sp.container-orchestration (2 additions)
 
   🧠 Skills Evolution Complete
 
-  ✅ FEATURE FULLY COMPLETE (Skills Used + Skills Updated)
+  ✅ FEATURE FULLY COMPLETE
 ```
 
-### ⚡ Enforcement Mechanism
+### PHR Documentation
 
-#### PASS ✅ - Skill-Based Implementation
-```text
-User: "Add performance logging to all services"
-Claude:
-  🔧 Skill Plan:
-  1. /sp.skill-creator → Create /sp.performance-logger
-  2. /sp.performance-logger → Add logging to services
+Skill learning MUST be recorded in PHR:
 
-  Waiting for approval... ✋
-
-User: "Approved"
-Claude:
-  🔧 Using Skill: /sp.skill-creator
-  Purpose: Create performance logging skill
-  ✅ Skill Complete
-
-  🔧 Using Skill: /sp.performance-logger
-  Purpose: Add @log_execution_time decorators
-  Files Generated:
-    - backend/src/utils/performance.py
-    - backend/src/services/conversation_service.py
-  ✅ Skill Complete
-```
-
-#### FAIL ❌ - Manual Implementation (VIOLATION)
-```text
-User: "Add performance logging to all services"
-Claude: [Creates utils/performance.py manually without using skills]
-
-❌ VIOLATION: Manual implementation without skill usage
-✅ CORRECT: Use /sp.skill-creator first, then invoke skill
-```
-
-### 📊 Skills Usage Tracking (MANDATORY)
-
-Every feature implementation MUST include:
-1. **Skill Execution Plan** - Before starting work
-2. **Terminal Skill Output** - During execution (visible to user)
-3. **Skills Usage Report** - In PHR and commit message
-
-**PHR Template Requirement:**
 ```yaml
-skills_used:
-  - name: /sp.mcp-tool-builder
-    tasks: T45-T48
-    purpose: Create add_task MCP tool
-    files: [src/mcp_tools/add_task.py]
-  - name: /sp.edge-case-tester
-    tasks: T60-T62
-    purpose: Comprehensive edge case testing
-    status: 57/57 passed
-skills_created:
-  - name: /sp.performance-logger
-    reason: No existing skill for execution time logging
-    location: .claude/skills/sp.performance-logger.md
-manual_tasks:
-  - task: None (all tasks completed via skills)
-violations: None
+skill_learning:
+  auto_triggered: true
+  trigger_condition: "User confirmed feature working"
+  feature: [Feature Name]
+  skills_used:
+    - /sp.skill-1
+    - /sp.skill-2
+  learnings_captured:
+    - category: bug_fix
+      description: [What was fixed]
+      added_to: /sp.skill-1
+    - category: pattern
+      description: [Pattern discovered]
+      added_to: /sp.skill-2
+  skills_updated:
+    - skill: /sp.skill-1
+      additions: [Number]
+    - skill: /sp.skill-2
+      additions: [Number]
 ```
 
-### 🏫 Why Skills Are MANDATORY (Educational Requirement)
+### Goal: Never Solve Same Problem Twice
 
-**Project teachers/instructors require skill-based approach because:**
-1. **Consistency**: Ensures all students follow same patterns
-2. **Reusability**: Skills improve and become smarter over time
-3. **Constitution Enforcement**: Skills automatically apply project principles
-4. **Quality**: Skills include comprehensive testing and validation
-5. **Learning**: Students understand feature patterns, not just code
-6. **Traceability**: Clear audit trail of what was used when
+**Once a problem is solved, it MUST live in a skill forever.**
 
-### 🚫 What Constitutes a Violation
+- Every bug fixed → Added to skill
+- Every pattern discovered → Added to skill
+- Every edge case found → Added to skill
+- Every workaround created → Added to skill
 
-**Violations include:**
-- ❌ Implementing features manually when skills exist
-- ❌ No terminal output showing skill usage (must show "🔧 Using Skill: /sp.skill-name")
-- ❌ No skill execution plan before starting work
-- ❌ Not creating skills for reusable capabilities
-- ❌ PHR/commits without skills usage documentation
-- ❌ Proceeding without user approval of skill plan
-- ❌ **NOT calling `/sp.skill-learner` after feature completion** (CRITICAL!)
-- ❌ **Saying "Feature Complete" without skill-learner running**
-
-**Consequences of violations:**
-- ⚠️ Work must be redone using proper skill-based approach
-- ⚠️ Constitution updated to prevent future violations
-- ⚠️ Skills created retroactively for violated implementations
-- ⚠️ **Feature marked as INCOMPLETE until skill-learner runs**
-
-### ✅ Skill-Based Development Checklist
-
-Before considering ANY Phase III+ feature complete:
-- [ ] Skill execution plan created and approved
-- [ ] Terminal output shows which skills were used ("🔧 Using Skill: /sp.skill-name")
-- [ ] All applicable skills invoked (or new skills created)
-- [ ] Skills usage documented in PHR
-- [ ] Skills usage mentioned in commit message
-- [ ] No manual implementation where skills exist
-- [ ] Constitution principles enforced via skills
-- [ ] **🧠 `/sp.skill-learner` called after implementation** (MANDATORY!)
-- [ ] **Learnings captured and skills updated** (MANDATORY!)
-
-**Remember: Skills are NOT optional. They are MANDATORY for all Phase III+ development.**
+**Skills become smarter with every project. This is the LEARNING LOOP.**
 
 ---
 
-## 🏭 Digital Agent Factory: Full-Time Equivalent (FTE) AI Agents (MANDATORY)
+## 🏭 Digital Agent Factory (17 FTE Agents)
 
-### ⚠️ CRITICAL REQUIREMENT - AGENT-FIRST DEVELOPMENT
+### Phase IV Priority Agents
 
-**THIS IS A RELIGIOUS ENFORCEMENT POLICY - NON-NEGOTIABLE**
+| Agent | Skills | Use For |
+|-------|--------|---------|
+| **devops-engineer** | 6 skills | Docker, K8s, Helm, deployment |
+| **fullstack-architect** | 8 skills | Deployment architecture |
+| **cloud-architect** | 7 skills | K8s resource planning |
 
-Starting from Phase III and beyond, ALL development work MUST be performed using the appropriate FTE (Full-Time Equivalent) AI Agents from the Digital Agent Factory. Manual implementation without agent usage is a VIOLATION.
+### All Available Agents
 
-### 🤖 16 Full-Time Equivalent AI Agents (EXPANDED!)
+**Orchestration (1):** orchestrator
+**Backend (5):** backend-developer, database-engineer, security-engineer, qa-engineer, devops-engineer
+**Frontend (3):** frontend-developer, uiux-designer, vercel-deployer
+**Cross-Cutting (2):** fullstack-architect, github-specialist
+**Enterprise (5):** data-engineer, technical-writer, cloud-architect, api-architect, product-manager
 
-**Location**: All agents are in `.claude/agents/` directory
-**Documentation**: `.claude/agents/README.md`
-**Total Skills Available**: 42 skills (expanded from 32)
-**Usage**: Select appropriate agent(s) based on the task domain
+---
 
-#### Orchestration (1 Agent)
+## Test-Driven Development (TDD) - Phase IV
 
-| Agent | Skills | When to Use |
-|-------|--------|-------------|
-| **orchestrator** | All 42 skills | AUTO-TRIGGERS on every request - analyzes prompts and delegates to specialists |
+### TDD for Containerization
+1. **Write container tests first**
+2. **Tests must FAIL** before implementation
+3. **Implement** Dockerfiles
+4. **Tests must PASS** after implementation
 
-#### Backend Specialists (5 Agents)
-
-| Agent | Skills | When to Use |
-|-------|--------|-------------|
-| **backend-developer** | 11 skills | Backend APIs, MCP tools, authentication, business logic |
-| **database-engineer** | 4 skills | Database design, migrations, query optimization, indexes |
-| **security-engineer** | 5 skills | OWASP compliance, security audits, penetration testing |
-| **qa-engineer** | 3 skills | Testing (unit, integration, E2E), edge cases, quality assurance |
-| **devops-engineer** | 4 skills | Infrastructure, deployment, monitoring, CI/CD |
-
-#### Frontend Specialists (3 Agents)
-
-| Agent | Skills | When to Use |
-|-------|--------|-------------|
-| **frontend-developer** | 6 skills | React, Next.js, TypeScript, Tailwind CSS, UI components, real-time features |
-| **uiux-designer** | 2 skills | UI/UX design, design systems, accessibility, user flows |
-| **vercel-deployer** | 4 skills | Vercel deployment, Next.js optimization, Edge Functions |
-
-#### Cross-Cutting Specialists (2 Agents)
-
-| Agent | Skills | When to Use |
-|-------|--------|-------------|
-| **fullstack-architect** | 8 skills | System design, architecture decisions, feature planning |
-| **github-specialist** | 3 skills | Git workflows, CI/CD, code review, branch management |
-
-#### 🆕 NEW Enterprise Specialists (5 Agents)
-
-| Agent | Skills | When to Use |
-|-------|--------|-------------|
-| **data-engineer** | 7 skills | Data pipelines (ETL/ELT), analytics, data warehouse, BI integration |
-| **technical-writer** | 4 skills | Documentation, user guides, API reference, tutorials, release notes |
-| **cloud-architect** | 7 skills | Cloud infrastructure (AWS/GCP/Azure), Kubernetes, IaC (Terraform) |
-| **api-architect** | 6 skills | API contract design, REST/GraphQL/gRPC, microservices, API versioning |
-| **product-manager** | 4 skills | Requirements gathering, user stories, roadmap planning, prioritization |
-
-### 🚨 ABSOLUTE AGENT REQUIREMENTS (MUST FOLLOW)
-
-#### 1. Agent Selection Is MANDATORY
-Before ANY work:
-- ✅ **REQUIRED**: Identify which agent(s) are appropriate for the task
-- ✅ **REQUIRED**: Use agent's available skills for implementation
-- ❌ **VIOLATION**: Working without selecting appropriate agent
-- ❌ **VIOLATION**: Manual implementation when agent exists
-
-#### 2. Agent-Skill Integration
-Each agent has specific skills available:
-- ✅ **backend-developer** → Can use jwt-authentication, mcp-tool-builder, database-schema-expander, etc.
-- ✅ **frontend-developer** → Can use vercel-deployer, ab-testing, uiux-designer
-- ✅ **security-engineer** → Can use jwt-authentication, password-security, user-isolation, edge-case-tester
-- ✅ **fullstack-architect** → Can use all agent skills for system design
-
-#### 3. Agent Workflow Pattern
-For every task, follow this pattern:
-
-```text
-1. 🎯 IDENTIFY TASK DOMAIN
-   Backend API? → /backend-developer
-   Database work? → /database-engineer
-   Frontend UI? → /frontend-developer
-   Architecture? → /fullstack-architect
-   Security? → /security-engineer
-   Testing? → /qa-engineer
-   Deployment? → /devops-engineer or /vercel-deployer
-
-2. 🔧 SELECT AGENT AND SKILLS
-   Agent: /backend-developer
-   Skills available:
-     - /sp.mcp-tool-builder
-     - /sp.jwt-authentication
-     - /sp.pydantic-validation
-     - ... (8 more)
-
-3. 📋 DISPLAY AGENT PLAN
-   Using Agent: /backend-developer
-   Skills Plan:
-     1. /sp.mcp-tool-builder → Create add_task tool
-     2. /sp.pydantic-validation → Request/response DTOs
-     3. /sp.edge-case-tester → Comprehensive testing
-
-   Waiting for approval... ✋
-
-4. ✅ EXECUTE WITH AGENT'S SKILLS
-   [Agent invokes skills sequentially]
-
-5. 📊 REPORT AGENT USAGE
-   [Document in PHR which agent was used]
-```
-
-### 🎯 Agent Usage Examples (Common Scenarios)
-
-#### Example 1: Add Authentication
-```text
-Task: Implement user authentication
-
-Agent Pipeline:
-1. /fullstack-architect → Design auth architecture
-2. /security-engineer → Design security strategy
-3. /backend-developer → Implement JWT + password hashing
-4. /database-engineer → Users table with user isolation
-5. /qa-engineer → Security edge case testing
-6. /devops-engineer → Environment variables setup
-
-Skills Used:
-- jwt-authentication
-- password-security
-- user-isolation
-- database-schema-expander
-- edge-case-tester
-```
-
-#### Example 2: Build AI Chatbot
-```text
-Task: Add AI chatbot functionality
-
-Agent Pipeline:
-1. /fullstack-architect → Plan chatbot architecture
-2. /database-engineer → Conversations + Messages tables
-3. /backend-developer → Build 5 MCP tools + chat endpoint
-4. /frontend-developer → Chat UI components
-5. /security-engineer → Security audit
-6. /qa-engineer → Comprehensive testing
-
-Skills Used:
-- mcp-tool-builder (5x)
-- ai-agent-setup
-- chatbot-endpoint
-- conversation-manager
-- database-schema-expander
-- edge-case-tester
-```
-
-#### Example 3: Deploy to Production
-```text
-Task: Production deployment
-
-Agent Pipeline:
-1. /security-engineer → Security audit (OWASP)
-2. /database-engineer → Connection pooling check
-3. /devops-engineer → Structured logging + monitoring
-4. /qa-engineer → Production checklist + smoke tests
-5. /vercel-deployer → Frontend deployment to Vercel
-6. /github-specialist → Create release tag
-
-Skills Used:
-- connection-pooling
-- structured-logging
-- performance-logger
-- production-checklist
-- deployment-automation
-- vercel-deployer
-```
-
-### 📋 Agent Documentation Reference
-
-Each agent has:
-- ✅ YAML frontmatter with name, role, description, skills, expertise
-- ✅ Core responsibilities clearly defined
-- ✅ Available skills list with purpose
-- ✅ Workflow guidelines
-- ✅ Best practices and checklists
-- ✅ Constitution compliance enforcement
-
-**View agent details:**
+### Container Testing Script
 ```bash
-# Backend agent
-cat .claude/agents/backend-developer.md
+#!/bin/bash
+# tests/container_tests.sh
 
-# Frontend agent
-cat .claude/agents/frontend-developer.md
+# Test: Docker build succeeds
+docker build -t todo-backend:test ./backend || exit 1
+docker build -t todo-frontend:test ./frontend || exit 1
 
-# Architecture agent
-cat .claude/agents/fullstack-architect.md
+# Test: Containers start and health check passes
+docker run -d --name backend-test -p 8000:8000 todo-backend:test
+sleep 10
+curl -f http://localhost:8000/health || exit 1
+docker rm -f backend-test
 
-# All agents
-cat .claude/agents/README.md
+echo "Container tests passed!"
 ```
 
-### 🚨 Agent-First Development Enforcement
+### K8s Testing Script
+```bash
+#!/bin/bash
+# tests/k8s_tests.sh
 
-#### PASS ✅ - Agent-Based Implementation
-```text
-User: "Add task management API endpoints"
+# Test: Helm lint passes
+helm lint ./helm/todo-app || exit 1
 
-Claude:
-  🎯 Task Domain: Backend API Development
+# Test: Pods are running
+kubectl wait --for=condition=ready pod -l app=todo-app --timeout=120s || exit 1
 
-  Using Agent: /backend-developer
-
-  Skills Plan:
-  1. /sp.pydantic-validation → Request/response DTOs
-  2. /sp.database-schema-expander → Tasks table
-  3. /sp.user-isolation → User-specific queries
-  4. /sp.api-docs-generator → OpenAPI docs
-  5. /sp.edge-case-tester → Edge case testing
-
-  Waiting for approval... ✋
-
-[After approval]
-  🔧 Using Skill: /sp.pydantic-validation
-  Purpose: Create request/response DTOs
-  ✅ Skill Complete
-
-  🔧 Using Skill: /sp.database-schema-expander
-  Purpose: Create Tasks table with migration
-  ✅ Skill Complete
-
-  [... continues with all skills ...]
-```
-
-#### FAIL ❌ - Manual Implementation Without Agent (VIOLATION)
-```text
-User: "Add task management API endpoints"
-
-Claude: [Creates routes/tasks.py and models.py manually without using agent]
-
-❌ VIOLATION: Manual implementation without agent selection
-❌ VIOLATION: No skill usage from agent's toolkit
-✅ CORRECT: Select /backend-developer agent, use its skills
-```
-
-### 🎓 Why Agents Are MANDATORY (Religious Enforcement)
-
-**Agents are religiously enforced because:**
-
-1. **Specialized Expertise**: Each agent brings domain-specific knowledge
-   - Backend agent knows FastAPI, SQLModel, authentication patterns
-   - Frontend agent knows Next.js, TypeScript, Tailwind CSS patterns
-   - Security agent knows OWASP Top 10, security best practices
-
-2. **Skill Integration**: Agents have curated skill sets
-   - Backend agent has 11 skills (jwt-auth, mcp-tools, database, etc.)
-   - Each skill enforces constitution principles automatically
-
-3. **Workflow Consistency**: Agents follow established workflows
-   - Backend agent: Design → Implement → Test → Document
-   - Frontend agent: Design → Component → Style → Test
-
-4. **Quality Assurance**: Agents enforce best practices
-   - Security agent: OWASP compliance checks
-   - QA agent: 57+ edge case scenarios
-   - DevOps agent: Production readiness validation
-
-5. **Constitution Compliance**: Agents enforce project principles
-   - Stateless architecture
-   - User isolation
-   - MCP-first design
-   - Database-centric state
-
-6. **Traceability**: Clear audit trail
-   - Which agent was used
-   - Which skills were invoked
-   - Why those choices were made
-
-### 🚫 Agent Violations
-
-**Violations include:**
-- ❌ Working without identifying appropriate agent
-- ❌ Manual implementation when agent exists for domain
-- ❌ Not using agent's available skills
-- ❌ Skipping agent selection step
-- ❌ Not documenting which agent was used in PHR
-- ❌ Agent plan not shown in terminal
-
-**Consequences:**
-- ⚠️ Work must be redone using appropriate agent
-- ⚠️ Agent usage must be documented retroactively
-- ⚠️ Constitution updated to prevent future violations
-
-### ✅ Agent-Based Development Checklist
-
-Before considering ANY work complete:
-- [ ] Appropriate agent(s) identified for task domain
-- [ ] Agent's available skills reviewed
-- [ ] Agent + skills plan displayed in terminal
-- [ ] User approval obtained
-- [ ] Agent's skills invoked sequentially
-- [ ] Agent usage documented in PHR
-- [ ] Skills from agent's toolkit used (not manual work)
-- [ ] Constitution principles enforced via agent
-
-### 🔗 Agent + Skills Integration
-
-**The Complete Flow:**
-```
-User Request
-    ↓
-1. Select Agent (based on domain)
-    ↓
-2. Agent identifies relevant skills
-    ↓
-3. Display Agent + Skills Plan
-    ↓
-4. Wait for approval
-    ↓
-5. Agent invokes skills sequentially
-    ↓
-6. Skills enforce constitution
-    ↓
-7. Report agent + skills usage
-    ↓
-Complete ✅
-```
-
-**Example:**
-```text
-User: "Optimize database queries"
-
-Agent Selection: /database-engineer (domain: database)
-
-Agent's Skills:
-- connection-pooling
-- transaction-management
-- database-schema-expander
-- user-isolation
-
-Skills Plan:
-1. /sp.connection-pooling → Optimize connection pool
-2. /sp.transaction-management → Review transaction patterns
-
-[Execute skills via database-engineer agent]
+echo "K8s tests passed!"
 ```
 
 ---
 
-## 🧠 Continuous Skill Learning (MANDATORY)
+## Governance
 
-### ⚠️ CRITICAL REQUIREMENT - SKILLS MUST EVOLVE
+### Constitution Authority
+- This constitution supersedes all other development practices
+- Phase IV is DEPLOYMENT ONLY - no feature changes allowed
+- All changes must use skill-based approach
+- Deviations require documented justification
 
-**After EVERY feature implementation, skills MUST be updated with learnings.**
+### Amendment Procedure
+1. Propose amendment with rationale
+2. Review against project goals
+3. Update constitution with proper versioning
+4. Document in ADR if architecturally significant
 
-This is a "Learning Loop" that makes skills smarter and more powerful over time.
-
-### 🔄 Learning Loop Workflow
-
-```
-Feature Implementation
-    ↓
-Issues/Bugs Encountered
-    ↓
-Solutions Developed
-    ↓
-🧠 /sp.skill-learner → Updates relevant skills
-    ↓
-Skills become smarter for future projects
-```
-
-### 📋 When to Update Skills
-
-Skills MUST be updated when:
-
-1. **Bug Fix** - A date parsing issue fixed → Update skill with the fix pattern
-2. **New Pattern** - Discovered better way to handle something → Add to skill
-3. **Edge Case** - Found edge case not covered → Add test case to skill
-4. **Correction** - Original skill guidance was wrong → Correct it
-5. **Enhancement** - Feature worked but could be better → Improve skill
-
-### 🔧 How to Update Skills
-
-Use `/sp.skill-learner` skill after completing features:
-
-```text
-🧠 Skill Learning Session
-
-Feature Completed: Robust AI Assistant
-Issues Encountered:
-  1. Date "Z" suffix parsing failed in Python <3.11
-  2. "tomorrow morning" not parsed by dateparser
-  3. Regex comma terminator broke dates like "Feb 6, 2026"
-
-Skills to Update:
-  - /sp.robust-ai-assistant → Add Date/Time Best Practices section
-
-Learning Captured: ✅
-Skill Updated: ✅
-```
-
-### 📊 Skill Update Categories
-
-| Category | What to Add | Example |
-|----------|-------------|---------|
-| **Bug Fixes** | Problem + Solution + Code | "Z" suffix handling |
-| **Edge Cases** | Scenario + Test | Empty input handling |
-| **Best Practices** | Pattern + Rationale | Unified parsing function |
-| **Code Templates** | Reusable code | DateParser class |
-| **Checklists** | Implementation checklist | Date/time checklist |
-| **Test Scenarios** | pytest/Jest tests | Date parsing tests |
-
-### 🚫 Skill Update Violations
-
-**Violations include:**
-- ❌ Completing feature without updating relevant skills
-- ❌ Fixing bugs but not documenting in skill
-- ❌ Discovering patterns but not adding to skills
-- ❌ Creating workarounds instead of improving skills
-
-### ✅ Skill Learning Checklist
-
-After EVERY feature implementation:
-- [ ] Identify learnings (bugs fixed, patterns discovered, edge cases)
-- [ ] Identify which skill(s) should be updated
-- [ ] Use `/sp.skill-learner` to update skill(s)
-- [ ] Verify skill now includes the learning
-- [ ] Document skill update in PHR
-
-### 🎯 Goal
-
-**Skills should become a "knowledge base" that:**
-- Captures ALL learnings from ALL projects
-- Provides ready-to-use solutions for common problems
-- Eliminates the need to solve same problems repeatedly
-- Makes future AI assistant projects faster and more robust
-
-**Remember: Skills are living documents. They MUST evolve with every project.**
+### Version Policy
+- **MAJOR**: Breaking changes to principles
+- **MINOR**: New sections added
+- **PATCH**: Clarifications, typo fixes
 
 ---
 
-### 📊 Agent Usage Tracking (MANDATORY)
-
-**PHR Template Requirement:**
-```yaml
-agent_used:
-  name: /backend-developer
-  domain: Backend API Development
-  skills_available: 11
-  skills_invoked:
-    - jwt-authentication
-    - mcp-tool-builder
-    - edge-case-tester
-  reason: Building MCP tools for AI agent
-
-agent_workflow:
-  - step: Design API contracts
-  - step: Implement MCP tools
-  - step: Add user isolation
-  - step: Comprehensive testing
-
-constitution_compliance:
-  - Stateless architecture: ✅
-  - User isolation: ✅
-  - MCP-first design: ✅
-```
-
-### 🎯 Quick Agent Reference
-
-| Task Domain | Use This Agent | Example Task |
-|-------------|----------------|--------------|
-| Backend API | backend-developer | Add REST endpoint |
-| Database | database-engineer | Create migration |
-| Security | security-engineer | Security audit |
-| Frontend UI | frontend-developer | Create component |
-| UI/UX Design | uiux-designer | Design system |
-| Architecture | fullstack-architect | Plan feature |
-| Testing | qa-engineer | Write tests |
-| Deployment | devops-engineer | Deploy backend |
-| Vercel | vercel-deployer | Deploy frontend |
-| Git/GitHub | github-specialist | Merge branches |
-
-**Remember: ALWAYS use agents. ALWAYS use their skills. This is MANDATORY and religiously enforced.**
-
----
-
-**Version**: 5.0.0 | **Ratified**: 2025-12-09 | **Last Amended**: 2026-01-06 (Enterprise Expansion: 16 Agents, 42 Skills, Modern Architecture)
+**Version**: 6.2.0 | **Ratified**: 2025-12-09 | **Last Amended**: 2026-02-06 (Skill Heading Display - Mandatory Before Use)

@@ -23,6 +23,8 @@
 - [Features](#features)
 - [Project Structure](#project-structure)
 - [Setup & Installation](#setup--installation)
+- [Docker Setup](#docker-setup)
+- [Minikube Deployment](#minikube-deployment-phase-4--003)
 - [Development Workflow](#development-workflow)
 - [Documentation](#documentation)
 - [MCP Tools](#mcp-tools)
@@ -430,6 +432,11 @@ todo-chatbot-phase3/
 │   ├── package.json
 │   └── next.config.js
 │
+├── docker/                       # Docker & Compose (Phase 4)
+│   ├── docker-compose.yml        # Full stack (backend + frontend)
+│   ├── docker-compose.dev.yml    # Development overrides
+│   └── .env.example              # Environment template
+│
 ├── specs/                        # Feature specifications
 │   └── chatbot/
 │       ├── spec.md               # Feature requirements
@@ -444,8 +451,7 @@ todo-chatbot-phase3/
 │   └── adr/                      # Architecture Decision Records
 │
 ├── CLAUDE.md                     # Root development guide ⭐
-├── README.md                     # This file ⭐
-└── docker-compose.yml            # Local development setup
+└── README.md                     # This file ⭐
 ```
 
 ---
@@ -539,6 +545,158 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 # Authentication
 BETTER_AUTH_SECRET=your-secret-key-here  # Same as backend
 ```
+
+---
+
+## 🐳 Docker Setup
+
+**Phase 4 – Containerization.** Run the full stack with Docker and Docker Compose. Backend and frontend use multi-stage builds, non-root users, and health endpoints for orchestration.
+
+**Spec:** `specs/phase-4-local-kubernetes/001-containerization/`
+
+### Prerequisites
+
+- **Docker** and **Docker Compose**
+- **Neon PostgreSQL** connection string (or any PostgreSQL)
+- **OpenAI API Key** and **Better Auth Secret**
+
+### Quick Start with Docker Compose
+
+```bash
+# From project root
+cd docker
+
+# Copy environment template and fill in values
+cp .env.example .env
+# Edit .env: DATABASE_URL, BETTER_AUTH_SECRET, OPENAI_API_KEY, NEXT_PUBLIC_API_URL
+
+# Build and start both services
+docker-compose up -d --build
+
+# Verify
+curl http://localhost:8000/health   # Backend: {"status":"healthy"}
+curl http://localhost:8000/ready    # Backend readiness (DB)
+curl http://localhost:3000/api/health  # Frontend: {"status":"healthy"}
+```
+
+- **Frontend:** http://localhost:3000  
+- **Backend API:** http://localhost:8000  
+- **Stop:** `docker-compose down`
+
+### Build & Run Individual Containers
+
+**Backend only:**
+
+```bash
+docker build -t todo-backend ./backend
+
+docker run -d --name backend-test -p 8000:8000 \
+  -e DATABASE_URL="$DATABASE_URL" \
+  -e BETTER_AUTH_SECRET="$BETTER_AUTH_SECRET" \
+  -e OPENAI_API_KEY="$OPENAI_API_KEY" \
+  todo-backend
+
+curl http://localhost:8000/health
+curl http://localhost:8000/ready
+docker rm -f backend-test
+```
+
+**Frontend only:**
+
+```bash
+docker build -t todo-frontend ./frontend
+
+docker run -d --name frontend-test -p 3000:3000 \
+  -e NEXT_PUBLIC_API_URL=http://localhost:8000 \
+  todo-frontend
+
+curl http://localhost:3000/api/health
+docker rm -f frontend-test
+```
+
+### Docker Environment Variables
+
+Use `docker/.env` (from `docker/.env.example`). Required:
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string (e.g. Neon) |
+| `BETTER_AUTH_SECRET` | Auth secret (same as backend/frontend) |
+| `OPENAI_API_KEY` | OpenAI API key for chatbot |
+| `NEXT_PUBLIC_API_URL` | Backend URL for browser; use `http://localhost:8000` when using Compose |
+
+### Health Endpoints
+
+| Service | Endpoint | Purpose |
+|---------|----------|---------|
+| Backend | `GET /health` | Liveness – is the process running? |
+| Backend | `GET /ready` | Readiness – DB connected, ready for traffic |
+| Frontend | `GET /api/health` | Liveness – is the app serving? |
+
+### Image Size & Security
+
+- Backend and frontend images are built for **&lt; 500MB** (multi-stage, slim/alpine bases).
+- Containers run as **non-root** user `appuser` (UID 1000).
+- See `backend/Dockerfile`, `frontend/Dockerfile`, and `docker/docker-compose.yml` for details.
+
+### Helm Chart (Phase 4 – Minikube)
+
+A Helm chart at `helm/todo-app/` packages the frontend and backend for Kubernetes (e.g. Minikube).
+
+**Validate and render (requires [Helm](https://helm.sh) 3):**
+
+```bash
+helm lint helm/todo-app
+helm template todo-app helm/todo-app
+helm template todo-app helm/todo-app -f helm/todo-app/values-minikube.yaml
+```
+
+**Install (after building images and loading into Minikube):** see **Minikube Deployment** below.
+
+**Spec:** `specs/phase-4-local-kubernetes/002-helm-charts/`
+
+### Minikube Deployment (Phase 4 – 003)
+
+Deploy the full stack to a local Kubernetes cluster (Minikube) using the Helm chart.
+
+**Prerequisites:** Docker, [Minikube](https://minikube.sigs.k8s.io/), [Helm](https://helm.sh), kubectl. Env vars: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `OPENAI_API_KEY` (e.g. from `docker/.env`).
+
+**1. Minikube setup**
+
+```bash
+./scripts/minikube-setup.sh
+```
+
+Starts Minikube (4 CPU, 8Gi memory), enables ingress and metrics-server. Verify: `kubectl get nodes`.
+
+**2. Deploy to Minikube**
+
+Secrets are read from **`docker/.env`** if not set in the shell. Ensure `docker/.env` has `DATABASE_URL`, `BETTER_AUTH_SECRET`, `OPENAI_API_KEY`. Then:
+
+```bash
+./scripts/deploy-minikube.sh
+```
+
+The script builds backend and frontend images inside Minikube’s Docker, then runs `helm upgrade --install` with the chart and `values-minikube.yaml`. Script auto-loads from docker/.env if present; otherwise export the vars first.
+
+**3. Access the app**
+
+- Ingress host: `todo.minikube.local` (see `helm/todo-app/values-minikube.yaml`).
+- Get Minikube IP: `minikube ip`.
+- Add to `/etc/hosts`: `<minikube-ip> todo.minikube.local`
+- Open in browser: **http://todo.minikube.local**
+
+The deploy script prints the line to add to `/etc/hosts` after a successful run.
+
+**4. Verify Minikube deployment**
+
+- **Pods:** `kubectl get pods` — backend and frontend pods should be `Running`.
+- **Health:** `curl http://todo.minikube.local/health` (backend), `curl http://todo.minikube.local/api/health` (frontend). Or use port-forward: `kubectl port-forward svc/todo-app-backend 8000:8000` then `curl http://localhost:8000/health` and `curl http://localhost:8000/ready`.
+- **App:** Sign in, create/list/update/delete/complete tasks, use AI chat (e.g. “Add a task to test”) and confirm MCP tools work.
+
+**Optional (AIOps):** Use `kubectl-ai` or Kagent for troubleshooting (e.g. “why is pod X not ready”) and document the command in a PHR.
+
+**Spec:** `specs/phase-4-local-kubernetes/003-minikube-deployment/`
 
 ---
 
@@ -676,6 +834,14 @@ The AI agent uses **5 MCP tools** to manage tasks:
 ---
 
 ## 🌐 API Endpoints
+
+### Health (Container / Orchestration)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Liveness – service running (backend) |
+| GET | `/ready` | Readiness – DB connected (backend) |
+| GET | `/api/health` | Liveness – app serving (frontend) |
 
 ### Authentication
 
@@ -922,18 +1088,24 @@ Using `/sp.edge-case-tester` skill:
 
 ## 🚢 Deployment
 
-### Development
+### Local with Docker (Phase 4)
 
 ```bash
-# Start both frontend and backend
-docker-compose up
+cd docker && cp .env.example .env && docker-compose up -d --build
+# Frontend: http://localhost:3000 | Backend: http://localhost:8000
 ```
+
+See [Docker Setup](#docker-setup) for full instructions.
+
+### Development (without Docker)
+
+Run backend and frontend directly (see [Setup & Installation](#setup--installation)).
 
 ### Production
 
-**Frontend:** Deployed on Vercel
-**Backend:** FastAPI on cloud platform
-**Database:** Neon Serverless PostgreSQL
+**Frontend:** Deployed on Vercel  
+**Backend:** FastAPI on cloud platform  
+**Database:** Neon Serverless PostgreSQL  
 
 See deployment guides:
 - Backend: `backend/CLAUDE.md`
@@ -1036,10 +1208,13 @@ This project is part of **Panaversity Hackathon II**.
 ## 🎯 Quick Start Commands
 
 ```bash
-# Backend
+# Docker (full stack)
+cd docker && cp .env.example .env && docker-compose up -d --build
+
+# Backend (local)
 cd backend && source venv/bin/activate && uvicorn src.main:app --reload
 
-# Frontend
+# Frontend (local)
 cd frontend && npm run dev
 
 # Tests

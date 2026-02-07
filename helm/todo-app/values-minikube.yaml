@@ -1,0 +1,13 @@
+# Minikube-specific overrides for todo-app
+# Usage: helm install todo-app helm/todo-app -f helm/todo-app/values-minikube.yaml
+
+ingress:
+  enabled: true
+  host: todo.minikube.local
+  className: "nginx"
+
+# Frontend must reach backend: in-cluster use backend service; browser needs Ingress URL
+# For Minikube, browser hits minikube IP/host, so API base URL should point to same host /api
+frontend:
+  env:
+    NEXT_PUBLIC_API_URL: "http://todo.minikube.local/api"
