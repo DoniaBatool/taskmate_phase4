@@ -1,11 +1,18 @@
 import { clearToken, getToken } from './auth';
 import type { ApiError } from './types';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
-
-// Debug logging
-console.log('🔧 API BASE_URL:', BASE_URL);
-console.log('🔧 Using Next.js Proxy:', BASE_URL.startsWith('/'));
+/** API base URL: explicit env, else same origin; localhost:3000 → backend on 8000 (direct port-forward). */
+function getApiBaseUrl(): string {
+  const g = typeof globalThis !== 'undefined' ? (globalThis as { process?: { env?: Record<string, string> } }).process?.env : undefined;
+  const envUrl = (g?.NEXT_PUBLIC_API_URL ?? '').trim();
+  if (envUrl) return envUrl;
+  if (typeof window !== 'undefined') {
+    // Direct port-forward: frontend on 3000, backend on 8000 — no Host/ingress issue
+    if (window.location.hostname === 'localhost' && window.location.port === '3000') return 'http://localhost:8000';
+    return window.location.origin;
+  }
+  return '/api/proxy';
+}
 
 export class AuthError extends Error {
   status: number;
@@ -26,8 +33,9 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const fullUrl = `${BASE_URL}${path}`;
-  console.log('🔧 Fetching:', fullUrl);
+  const baseUrl = getApiBaseUrl();
+  const fullUrl = `${baseUrl.replace(/\/$/, '')}${path.startsWith('/') ? path : `/${path}`}`;
+  console.log('🔧 Fetching:', fullUrl, baseUrl === 'http://localhost:8000' ? '(Minikube direct)' : '');
 
   const res = await fetch(fullUrl, {
     ...options,

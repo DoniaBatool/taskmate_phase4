@@ -6,8 +6,7 @@ ingress:
   host: todo.minikube.local
   className: "nginx"
 
-# Frontend must reach backend: in-cluster use backend service; browser needs Ingress URL
-# For Minikube, browser hits minikube IP/host, so API base URL should point to same host /api
+# Frontend (browser) must call API on same host:port as the app (port-forward uses 8080)
 frontend:
   env:
-    NEXT_PUBLIC_API_URL: "http://todo.minikube.local/api"
+    NEXT_PUBLIC_API_URL: "http://todo.minikube.local:8080"

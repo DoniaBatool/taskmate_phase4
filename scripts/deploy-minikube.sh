@@ -36,15 +36,18 @@ if ! minikube status &>/dev/null; then
   exit 1
 fi
 
-# --- Build images inside Minikube's Docker so they are available to the cluster ---
-echo "Configuring Docker to use Minikube's daemon..."
-eval $(minikube docker-env)
-
-echo "Building backend image..."
+# --- Build on host Docker (has working DNS), then load into Minikube ---
+# Building inside Minikube's daemon often fails with "no such host" for registry-1.docker.io
+echo "Building backend image (on host Docker)..."
 docker build -t todo-backend:latest ./backend
 
-echo "Building frontend image..."
-docker build -t todo-frontend:latest ./frontend
+echo "Building frontend image (on host Docker)..."
+# Force rebuild so api.ts same-origin fix is included (cached layers skip npm run build)
+docker build --no-cache -t todo-frontend:latest ./frontend
+
+echo "Loading images into Minikube..."
+minikube image load todo-backend:latest
+minikube image load todo-frontend:latest
 
 # --- Helm install with secrets ---
 echo "Installing/upgrading Helm release todo-app..."
